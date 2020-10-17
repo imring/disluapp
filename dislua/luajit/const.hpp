@@ -131,80 +131,77 @@
   _(FUNCCW,	rbase,	___,	___,	___)
 
 namespace dislua {
-	namespace lj2 {
-		namespace header {
-			constexpr byte HEAD1 = 0x1b;
-			constexpr byte HEAD2 = 0x4c;
-			constexpr byte HEAD3 = 0x4a;
+  namespace lj {
+    namespace header {
+      constexpr byte HEAD1 = 0x1b;
+      constexpr byte HEAD2 = 0x4c;
+      constexpr byte HEAD3 = 0x4a;
+    };
 
-			// version of luajit compiler
-			constexpr byte VERSION = 2;
-		};
+    enum dump_flags: uleb128 {
+      DUMP_BE    = 0b1,
+      DUMP_STRIP = 0b10,
+      DUMP_FFI   = 0b100,
+      DUMP_FR2   = 0b1000
+    };
 
-		enum dump_flags: uleb128 {
-			DUMP_BE    = 0b1,
-			DUMP_STRIP = 0b10,
-			DUMP_FFI   = 0b100,
-			DUMP_FR2   = 0b1000
-		};
+    enum kgc: uleb128 {
+      KGC_CHILD,
+      KGC_TAB,
+      KGC_I64,
+      KGC_U64,
+      KGC_COMPLEX,
+      KGC_STR
+    };
 
-		enum kgc: uleb128 {
-			KGC_CHILD,
-			KGC_TAB,
-			KGC_I64,
-			KGC_U64,
-			KGC_COMPLEX,
-			KGC_STR
-		};
+    enum ktab: uleb128 {
+      KTAB_NIL,
+      KTAB_FALSE,
+      KTAB_TRUE,
+      KTAB_INT,
+      KTAB_NUM,
+      KTAB_STR
+    };
 
-		enum ktab: uleb128 {
-			KTAB_NIL,
-			KTAB_FALSE,
-			KTAB_TRUE,
-			KTAB_INT,
-			KTAB_NUM,
-			KTAB_STR
-		};
+    enum proto_flags: byte {
+      PROTO_CHILD  = 0b1,
+      PROTO_VARARG = 0b10,
+      PROTO_FFI    = 0b100,
+      PROTO_NOJIT  = 0b1000,
+      PROTO_ILOOP  = 0b10000
+    };
 
-		enum proto_flags: byte {
-			PROTO_CHILD  = 0b1,
-			PROTO_VARARG = 0b10,
-			PROTO_FFI    = 0b100,
-			PROTO_NOJIT  = 0b1000,
-			PROTO_ILOOP  = 0b10000
-		};
+    enum varnames: byte {
+      VARNAME_END,
+      VARNAME_FOR_IDX,   // (for index)
+      VARNAME_FOR_STOP,  // (for limit)
+      VARNAME_FOR_STEP,  // (for step)
+      VARNAME_FOR_GEN,   // (for generator)
+      VARNAME_FOR_STATE, // (for state)
+      VARNAME_FOR_CTL,   // (for control)
+      VARNAME__MAX
+    };
 
-		enum varnames: byte {
-			VARNAME_END,
-			VARNAME_FOR_IDX,   // (for index)
-			VARNAME_FOR_STOP,  // (for limit)
-			VARNAME_FOR_STEP,  // (for step)
-			VARNAME_FOR_GEN,   // (for generator)
-			VARNAME_FOR_STATE, // (for state)
-			VARNAME_FOR_CTL,   // (for control)
-			VARNAME__MAX
-		};
+    enum bcmode {
+      BCM___, // BCMnone
+      BCMdst, BCMbase, BCMvar, BCMrbase, BCMuv,  /* Mode A must be <= 7 */
+      BCMlit, BCMlits, BCMpri, BCMnum, BCMstr, BCMtab, BCMfunc, BCMjump, BCMcdata,
+      BCM_max
+    };
 
-		enum bcmode {
-			BCM___, // BCMnone
-			BCMdst, BCMbase, BCMvar, BCMrbase, BCMuv,  /* Mode A must be <= 7 */
-			BCMlit, BCMlits, BCMpri, BCMnum, BCMstr, BCMtab, BCMfunc, BCMjump, BCMcdata,
-			BCM_max
-		};
-
-		enum bcops: byte {
+    enum bcops: byte {
 #define BCENUM(name, ma, mb, mc, mm)	BC_##name,
-			BCDEF(BCENUM)
+      BCDEF(BCENUM)
 #undef BCENUM
-			BC__MAX
-		};
+      BC__MAX
+    };
 
-		static const std::pair<std::string, word> opcodes[] = {
+    static const std::pair<std::string, word> opcodes[] = {
 #define BCOPCODES(name, ma, mb, mc, mm)	{ #name, (BCM##ma|(BCM##mb<<3)|(BCM##mc<<7)) },
-			BCDEF(BCOPCODES)
+      BCDEF(BCOPCODES)
 #undef BCOPCODES
-		};
-	};
+    };
+  };
 };
 
 #undef BCDEF

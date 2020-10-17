@@ -32,6 +32,6 @@
 *.app
 
 # Custom
-doc
-.vscode
-examples
+/doc
+/examples
+/.vscode
