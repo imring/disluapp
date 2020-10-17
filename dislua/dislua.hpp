@@ -24,7 +24,7 @@ namespace dislua {
     if (in->compiler == ENUM) return in; \
   } catch (...) { delete in; in = nullptr; }
 
-    CHECK_COMPILER(lj2::parser, COMPILER_LUAJIT);
+    CHECK_COMPILER(lj::parser, COMPILER_LUAJIT);
     
 #undef CHECK_COMPILER
 
