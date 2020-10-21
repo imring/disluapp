@@ -4,11 +4,12 @@
 #include "../trains.hpp"
 #include "const.hpp"
 
-#include <iostream>
-#include <map>
-#include <complex>
 #include <algorithm>
+#include <iostream>
+#include <variant>
+#include <complex>
 #include <cmath>
+#include <map>
 
 namespace dislua {
   namespace lj {
@@ -292,7 +293,13 @@ namespace dislua {
         buf.write(header::HEAD2);
         buf.write(header::HEAD3);
 
-        buf.write<byte>(version);
+        byte ver = 0;
+        switch (version) {
+        case CV_LUAJIT1: ver = 1; break;
+        case CV_LUAJIT2: ver = 2; break;
+        default: break;
+        }
+        buf.write(ver);
         buf.write_uleb128(header.flags);
 
         if (!(header.flags & DUMP_STRIP)) {

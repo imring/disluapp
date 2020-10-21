@@ -1,13 +1,13 @@
 ﻿#pragma once
+#include "const.hpp"
+
+#include <type_traits>
+#include <functional>
+#include <stdexcept>
+#include <cstring>
 #include <vector>
 #include <string>
 #include <limits>
-#include <cstring>
-#include <stdexcept>
-#include <functional>
-#include <type_traits>
-
-#include "const.hpp"
 
 namespace dislua {
   class buffer {
