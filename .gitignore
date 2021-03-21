@@ -32,6 +32,6 @@
 *.app
 
 # Custom
-/doc
-/examples
+/docs
+/build
 /.vscode

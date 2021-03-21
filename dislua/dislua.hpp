@@ -1,33 +1,133 @@
-﻿#pragma once
-#include "const.hpp"
+// dislua
+
+// MIT License
+
+// Copyright (c) 2020-2021 Vitaliy Vorobets
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+#ifndef DISLUA_H
+#define DISLUA_H
+
+#include <memory>
+#include <type_traits>
+
 #include "buffer.hpp"
-#include "interface.hpp"
+#include "const.hpp"
+#include "dump_info.hpp"
 
-#include "luajit/parser.hpp"
+#include "lj/ljparser.hpp"
 
+/**
+ * @brief DisLua library namespace.
+ *
+ * DisLua is a library that allows you to parse and rewrite the bytecode of
+ * compiled Lua scripts.
+ *
+ */
 namespace dislua {
-  template<typename T>
-  static interface *read_current(buffer &buf) {
-    static_assert(std::is_base_of_v<interface, T> && !std::is_same_v<interface, T>, "This type is not a dislua parser.");
-    interface *result = new T(buf);
-    result->read();
-    return result;
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#elif defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4505)
+#endif
+
+/**
+ * @brief Parses the buffer using the specific parser.
+ *
+ * @code{.cpp}
+ * dislua::buffer buf{...};
+ * try {
+ *   auto info = dislua::read_current<dislua::lj::parser>(buf);
+ * } catch (const std::exception &e) {
+ *   std::cerr << e.what() << '\n';
+ * }
+ * @endcode
+ *
+ * @tparam T Parser type (must be child of dislua::dump_info), e.g.
+ * dislua::lj::parser.
+ * @param[in] buf Buffer with compiled lua script.
+ * @return std::unique_ptr<dump_info> Smart pointer to compiled lua script
+ * information.
+ *
+ * @note If you need to parse with all the parsers that are available in the
+ * DisLua library, then use dislua::read_all.
+ *
+ * @exception std::runtime_error Parsing error.
+ * @exception std::out_of_range An error occurred while exiting the container.
+ */
+template <typename T,
+          typename = std::enable_if_t<std::is_base_of_v<dump_info, T> &&
+                                      !std::is_same_v<T, dump_info>>>
+static std::unique_ptr<dump_info> read_current(buffer &buf) {
+  std::unique_ptr<dump_info> check = std::make_unique<T>(buf);
+  check->read();
+  return check;
+}
+
+/**
+ * @brief Parses the buffer with all parsers available in the DisLua library.
+ *
+ * **Example**
+ * @code{.cpp}
+ * dislua::buffer buf{...};
+ * auto info = dislua::read_all(buf);
+ * if (!info) {
+ *   std::cerr << "Unknown compiler of lua script.\n";
+ *   return 1;
+ * }
+ * @endcode
+ *
+ * @param[in] buf Buffer with compiled lua script.
+ * @return std::unique_ptr<dump_info> Smart pointer to compiled lua script
+ * information.
+ */
+static std::unique_ptr<dump_info> read_all(buffer &buf) {
+  std::unique_ptr<dump_info> in;
+
+#define CHECK_COMPILER(T)                                                      \
+  try {                                                                        \
+    in = read_current<T>(buf);                                                 \
+    return in;                                                                 \
+  } catch (...) {                                                              \
+    in.reset(nullptr);                                                         \
   }
-  
-  static interface *read(buffer &buf) {
-    interface *in = nullptr;
-    std::string errors;
 
-#define CHECK_COMPILER(T, ENUM) \
-  try { \
-    in = read_current<T>(buf); \
-    if (in->compiler == ENUM) return in; \
-  } catch (...) { delete in; in = nullptr; }
+  CHECK_COMPILER(lj::parser);
 
-    CHECK_COMPILER(lj::parser, COMPILER_LUAJIT);
-    
 #undef CHECK_COMPILER
 
-    return in;
-  }
-};
+  return in;
+}
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+} // namespace dislua
+
+#endif // DISLUA_H
