@@ -47,7 +47,9 @@ enum compilers {
   /// Unknown compiler.
   DISLUA_UNKNOWN = -1,
   /// [LuaJIT](https://luajit.org/) (v1/v2).
-  DISLUA_LUAJIT
+  DISLUA_LUAJIT,
+  /// [luac](https://www.lua.org/) (v5.4).
+  DISLUA_LUAC,
 };
 
 namespace {

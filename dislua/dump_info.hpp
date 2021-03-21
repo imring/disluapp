@@ -63,7 +63,8 @@ public:
    * @param rv Class dump_info.
    */
   dump_info(const dump_info &rv)
-      : header(rv.header), version(rv.version), protos(rv.protos),
+      : header(rv.header), version(rv.version), format(rv.format),
+        sizes(rv.sizes), protos(rv.protos),
         buf(std::make_unique<buffer>(*rv.buf)) {}
 
   virtual ~dump_info() {}
@@ -155,6 +156,15 @@ public:
 
   /// Compiled Lua script version.
   uint version = 0;
+  /// Format (for Lua 5.4).
+  uint format = 0;
+
+  /// Type sizes (for Lua 5.4).
+  struct {
+    size_t sins = 0;
+    size_t sint = 0;
+    size_t snum = 0;
+  } sizes;
 
   /// Container with prototypes.
   std::vector<proto> protos;

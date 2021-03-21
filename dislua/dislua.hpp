@@ -33,6 +33,7 @@
 #include "dump_info.hpp"
 
 #include "lj/ljparser.hpp"
+#include "luac/lparser.hpp"
 
 /**
  * @brief DisLua library namespace.
@@ -56,6 +57,7 @@ namespace dislua {
 /**
  * @brief Parses the buffer using the specific parser.
  *
+ * **Example**
  * @code{.cpp}
  * dislua::buffer buf{...};
  * try {
@@ -115,6 +117,7 @@ static std::unique_ptr<dump_info> read_all(buffer &buf) {
   }
 
   CHECK_COMPILER(lj::parser);
+  CHECK_COMPILER(luac::parser);
 
 #undef CHECK_COMPILER
 
