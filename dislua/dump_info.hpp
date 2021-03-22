@@ -1,4 +1,5 @@
-// dislua
+// Project: disluapp
+// URL: https://github.com/imring/disluapp/
 
 // MIT License
 
@@ -46,21 +47,24 @@ namespace dislua {
 #pragma warning(disable : 4201)
 #endif
 
-/// Class with all information about the compiled Lua script.
-/// This class is the backbone of parsers.
+/**
+ * @brief Class with all information about the compiled Lua script.
+ * 
+ * This class is the backbone of parsers.
+ */
 class dump_info {
 public:
   /**
    * @brief Constructor with a class buffer.
    *
-   * @param _buf Class buffer.
+   * @param[in] _buf Buffer.
    */
   dump_info(buffer &_buf) : buf(std::make_unique<buffer>(_buf)) {}
 
   /**
    * @brief Constructor with a class dump_info.
    *
-   * @param rv Class dump_info.
+   * @param[in] rv Class with information about the script.
    */
   dump_info(const dump_info &rv)
       : header(rv.header), version(rv.version), protos(rv.protos),
@@ -70,7 +74,7 @@ public:
 
   struct proto;
 
-  //// Type with variation of key/value type table
+  //// Type with variation of key/value type table.
   using table_val_t =
       std::variant<std::nullptr_t, bool, leb128, double, std::string>;
 

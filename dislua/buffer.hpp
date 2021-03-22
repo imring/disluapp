@@ -1,4 +1,5 @@
-// dislua
+// Project: disluapp
+// URL: https://github.com/imring/disluapp/
 
 // MIT License
 
@@ -42,18 +43,34 @@ public:
   buffer() = default;
 
   /**
-   * @brief Constructor with two iterators.
+   * @brief Constructs with two iterators.
+   * 
+   * @code{.cpp}
+   * // input iterators
+   * std::ifstream luac("./file.luac", std::ios::binary);
+   * dislua::buffer buf_input((std::istreambuf_iterator<char>(luac)),
+   *                          std::istreambuf_iterator<char>());
+   * 
+   * // forward iterators
+   * std::vector<unsigned char> a = {1, 2, 3};
+   * dislua::buffer buf_forward(a.begin(), a.end());
+   * @endcode
    *
    * @tparam It Iterator type.
-   * @param [in] first,last Range of elements.
+   * @param[in] first,last Range of elements.
    */
-  template <typename It> buffer(It first, It last) {
+  template <typename It>
+  buffer(It first, It last) {
     write(first, last);
     reset_indices();
   }
 
   /**
-   * @brief Constructor with an initialization list.
+   * @brief Constructs with an initialization list.
+   * 
+   * @code{.cpp}
+   * dislua::buffer buf{1, 2, 3};
+   * @endcode
    *
    * @tparam T Element type.
    * @param[in] arr Initialization list.
@@ -62,7 +79,7 @@ public:
   buffer(std::initializer_list<T> arr) : buffer(arr.begin(), arr.end()) {}
 
   /**
-   * @brief Constructor with a class buffer.
+   * @brief Constructs with a class buffer.
    *
    * @param[in] buf Class buffer.
    */
@@ -71,7 +88,7 @@ public:
   }
 
   /**
-   * @brief Read variables from the buffer and writes to the T-type array.
+   * @brief Reads values from the buffer and writes to the T-type array.
    *
    * @code{.cpp}
    * dislua::buffer buf{ 0x10, 0x80, 0xD, 0x2 };
@@ -86,17 +103,18 @@ public:
    * // output: 10 10 80
    * @endcode
    *
-   * @tparam T Variable type.
+   * @tparam T Value type.
    * @param[out] arr Array.
    * @param[in] number Amount of elements.
    * @param[in] next Move to the next index to be read.
    *
    * @exception std::out_of_range An error occurred while exiting the container.
    */
-  template <typename T> void read(T *arr, size_t number, bool next = true) {
+  template <typename T>
+  void read(T *arr, size_t number, bool next = true) {
     size_t s = sizeof(T) * number;
     if (iread + s - 1 >= size())
-      throw std::out_of_range("");
+      throw std::out_of_range("Read index better than container size.");
 
     uchar *data = d.data();
     std::memcpy(arr, data + iread, s);
@@ -105,8 +123,8 @@ public:
   }
 
   /**
-   * @brief Read variables from the buffer and writes to the container using
-   * two iterators.
+   * @brief Reads values from the buffer and writes to the container using two
+   * iterators.
    *
    * @code{.cpp}
    * dislua::buffer buf{ 0x10, 0x80, 0xD, 0x2 };
@@ -124,16 +142,20 @@ public:
    * @param[out] first,last Range of elements.
    * @param[in] next Move to the next index to be read.
    *
+   * @warning Size of value type of the iterator must be equal to size of
+   * unsigned char.
+   *
    * @exception std::out_of_range An error occurred while exiting the container.
    */
-  template <typename It> void read(It first, It last, bool next = true) {
+  template <typename It>
+  void read(It first, It last, bool next = true) {
     using T = typename std::iterator_traits<It>::value_type;
     static_assert(sizeof(T) == sizeof(uchar),
                   "Size of type not equals size of byte type.");
 
     size_t s = static_cast<size_t>(std::distance(first, last));
     if (iread + s - 1 >= size())
-      throw std::out_of_range("");
+      throw std::out_of_range("Read index better than container size.");
 
     decltype(d)::iterator start =
         d.begin() + static_cast<std::ptrdiff_t>(iread);
@@ -143,8 +165,7 @@ public:
   }
 
   /**
-   * @brief Write variables from the container to the buffer using two input
-   * iterators.
+   * @brief Writes values from the container to the buffer using two input iterators.
    *
    * @code{.cpp}
    * std::ifstream luac(...);
@@ -155,6 +176,9 @@ public:
    *
    * @tparam It Iterator type.
    * @param[in] first,last Range of elements.
+   * 
+   * @warning Size of value type of the iterator must be equal to size of
+   * unsigned char.
    */
   template <typename It>
   void write(It first, It last, std::input_iterator_tag) {
@@ -184,7 +208,7 @@ public:
   }
 
   /**
-   * @brief Write variables from the container to the buffer using two forward
+   * @brief Writes values from the container to the buffer using two forward
    * iterators.
    *
    * @code{.cpp}
@@ -195,6 +219,9 @@ public:
    *
    * @tparam It Iterator type.
    * @param[in] first,last Range of elements.
+   *
+   * @warning Size of value type of the iterator must be equal to size of
+   * unsigned char.
    */
   template <typename It>
   void write(It first, It last, std::forward_iterator_tag) {
@@ -213,7 +240,7 @@ public:
   }
 
   /**
-   * @brief Write variables from the buffer and writes to the T-type array.
+   * @brief Writes values from the buffer and writes to the T-type array.
    *
    * @code{.cpp}
    * dislua::buffer buf;
@@ -221,11 +248,12 @@ public:
    * buf.write(arr, 3);
    * @endcode
    *
-   * @tparam T Variable type.
+   * @tparam T Value type.
    * @param[in] arr Array.
    * @param[in] number Amount of elements.
    */
-  template <typename T> void write(T *arr, size_t number) {
+  template <typename T>
+  void write(T *arr, size_t number) {
     size_t s = sizeof(T) * number;
     if (iwrite + s - 1 >= size())
       d.resize(size() + s);
@@ -236,7 +264,7 @@ public:
   }
 
   /**
-   * @brief Read a variable of the specified type from the buffer.
+   * @brief Reads a value of the specified type from the buffer.
    *
    * @code{.cpp}
    * dislua::buffer buf{ 0xA, 0xBC };
@@ -251,9 +279,12 @@ public:
    * @param[in] next Move to the next index to be read.
    * @return T-type variable.
    *
+   * @warning Type T doesn't have to be a pointer.
+   *
    * @exception std::out_of_range An error occurred while exiting the container.
    */
-  template <typename T = uchar> inline T read(bool next = true) {
+  template <typename T = uchar>
+  inline T read(bool next = true) {
     static_assert(!std::is_pointer_v<T>, "This method doesn't support pointer");
 
     T val;
@@ -262,7 +293,7 @@ public:
   }
 
   /**
-   * @brief Write a variable of a specific type to the buffer.
+   * @brief Writes a variable of a specific type to the buffer.
    *
    * @code{.cpp}
    * dislua::buffer buf;
@@ -274,34 +305,56 @@ public:
    *
    * @warning Type T doesn't have to be a pointer.
    */
-  template <typename T> inline void write(T val) {
+  template <typename T>
+  inline void write(T val) {
     static_assert(!std::is_pointer_v<T>, "This method doesn't support pointer");
     write(&val, 1);
   }
 
   /**
-   * @brief Write variables from the container to the buffer using two
+   * @brief Writes values from the container to the buffer using two
    * iterators.
+   * 
+   * @code{.cpp}
+   * dislua::buffer buf;
+   * 
+   * // input iterators
+   * std::ifstream luac("./file.luac", std::ios::binary);
+   * buf.write((std::istreambuf_iterator<char>(luac)),
+   *           std::istreambuf_iterator<char>());
+   * 
+   * // forward iterators
+   * std::vector<unsigned char> a = {1, 2, 3};
+   * buf.write(a.begin(), a.end());
+   * @endcode
    *
    * @tparam It Iterator type.
    * @param[in] first,last Range of elements.
    */
-  template <typename It> inline void write(It first, It last) {
+  template <typename It>
+  inline void write(It first, It last) {
     write(first, last, typename std::iterator_traits<It>::iterator_category());
   }
   /**
-   * @brief Write variables to the buffer from another buffer.
+   * @brief Writes variables to the buffer from another buffer.
    *
+   * @code{.cpp}
+   * dislua::buffer a{1, 2, 3};
+   * dislua::buffer b;
+   * 
+   * b.write(a);
+   * @endcode
+   * 
    * @param[in] buf Another buffer.
    */
   inline void write(buffer &buf) { write(buf.d.begin(), buf.d.end()); }
 
-  /// Reset the buffer
+  /// Resets the buffer.
   inline void reset() {
     reset_indices();
     d.clear();
   }
-  /// Reset buffer indices.
+  /// Resets buffer indices.
   inline void reset_indices() { iread = iwrite = 0; }
   /// Returns a copy of the buffer container.
   inline decltype(d) copy_data() { return d; }
@@ -311,7 +364,7 @@ public:
   // Another types
 
   /**
-   * @brief Read ULEB128 (Unsigned Little Endian Base 128).
+   * @brief Reads ULEB128 (Unsigned Little Endian Base 128).
    *
    * @code{.cpp}
    *
@@ -346,7 +399,8 @@ public:
   }
 
   /**
-   * @brief Read variables of ULEB128 from the buffer and writes to the array.
+   * @brief Reads ULEB128 values (Unsigned Little Endian Base 128) from the
+   * buffer and writes to the array.
    *
    * @code{.cpp}
    * dislua::buffer buf{ 0x90, 0x3, 0xA5, 0x95, 0x3 };
@@ -374,7 +428,8 @@ public:
   }
 
   /**
-   * @brief Read top 32 bits of 33 bit ULEB128 value from buffer.
+   * @brief Reads top 32 bits of 33 bit ULEB128 (Unsigned Little Endian Base
+   * 128) value from buffer.
    *
    * @param[in] next Move to the next index to be read.
    * @return ULEB128 value.
@@ -401,7 +456,7 @@ public:
   }
 
   /**
-   * @brief Write ULEB128
+   * @brief Writes ULEB128 (Unsigned Little Endian Base 128).
    *
    * @code{.cpp}
    * dislua::buffer buf;
@@ -417,13 +472,15 @@ public:
   }
 
   /**
-   * @brief Write ULEB128 variables from the buffer and writes to the array.
+   * @brief Writes ULEB128 (Unsigned Little Endian Base 128) variables from the
+   * buffer and writes to the array.
    *
    * @code{.cpp}
    * dislua::buffer buf;
    * dislua::buffer vals[2] = { 400, 51877 };
    * buf.write_uleb128(vals, 2);
    * @endcode
+   * 
    * @param[in] obj Array.
    * @param[in] number Amount of elements.
    */
@@ -433,7 +490,7 @@ public:
   }
 
   /**
-   * @brief Write a 33 bit ULEB128.
+   * @brief Writes a 33 bit ULEB128 (Unsigned Little Endian Base 128).
    *
    * @code{.cpp}
    * dislua::buffer buf;
