@@ -9,7 +9,14 @@ DisLua is a header-only library that allows you to parse and rewrite the bytecod
 - [Luad](https://github.com/imring/luad) - Disassembler for compiled Lua scripts.
 
 ## Documentation
-You can build Doxygen documentation using CMake specifying the option `-DBUILD_DOC=ON`, or manually using the command `doxygen`.
+You can build Doxygen documentation:
+- Using CMake specifying the option `-DBUILD_DOC=ON`:
+```bash
+$ mkdir build && cd build
+$ cmake .. -DBUILD_DOC=ON
+$ cmake --build . --target doc
+```
+- Manually using the command `doxygen`.
 
 ## Use in projects
 Install the library using CMake:

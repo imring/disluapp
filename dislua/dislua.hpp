@@ -1,4 +1,5 @@
-// dislua
+// Project: disluapp
+// URL: https://github.com/imring/disluapp/
 
 // MIT License
 
@@ -40,7 +41,6 @@
  *
  * DisLua is a library that allows you to parse and rewrite the bytecode of
  * compiled Lua scripts.
- *
  */
 namespace dislua {
 #if defined(__clang__)
@@ -55,7 +55,7 @@ namespace dislua {
 #endif
 
 /**
- * @brief Parses the buffer using the specific parser.
+ * @brief Parse the buffer using the specific parser.
  *
  * **Example**
  * @code{.cpp}
@@ -67,11 +67,12 @@ namespace dislua {
  * }
  * @endcode
  *
- * @tparam T Parser type (must be child of dislua::dump_info), e.g.
- * dislua::lj::parser.
+ * @tparam T Parser type (e.g. dislua::lj::parser).
  * @param[in] buf Buffer with compiled lua script.
  * @return std::unique_ptr<dump_info> Smart pointer to compiled lua script
  * information.
+ * 
+ * @warning T-type must be child of dislua::dump_info.
  *
  * @note If you need to parse with all the parsers that are available in the
  * DisLua library, then use dislua::read_all.
@@ -88,10 +89,18 @@ static std::unique_ptr<dump_info> read_current(buffer &buf) {
   return check;
 }
 
+namespace {
+template <typename T>
+static std::unique_ptr<dump_info> read_current_wo_exception(buffer &buf) try {
+  return read_current<T>(buf);
+} catch (...) {
+  return nullptr;
+}
+} // namespace
+
 /**
- * @brief Parses the buffer with all parsers available in the DisLua library.
+ * @brief Parse the buffer with all parsers available in the DisLua library.
  *
- * **Example**
  * @code{.cpp}
  * dislua::buffer buf{...};
  * auto info = dislua::read_all(buf);
@@ -107,19 +116,8 @@ static std::unique_ptr<dump_info> read_current(buffer &buf) {
  */
 static std::unique_ptr<dump_info> read_all(buffer &buf) {
   std::unique_ptr<dump_info> in;
-
-#define CHECK_COMPILER(T)                                                      \
-  try {                                                                        \
-    in = read_current<T>(buf);                                                 \
-    return in;                                                                 \
-  } catch (...) {                                                              \
-    in.reset(nullptr);                                                         \
-  }
-
-  CHECK_COMPILER(lj::parser);
-  CHECK_COMPILER(luac::parser);
-
-#undef CHECK_COMPILER
+  if ((in = read_current_wo_exception<lj::parser>(buf))
+   || (in = read_current_wo_exception<luac::parser>(buf))) return in;
 
   return in;
 }

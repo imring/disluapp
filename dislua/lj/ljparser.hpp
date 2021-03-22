@@ -1,4 +1,5 @@
-// dislua
+// Project: disluapp
+// URL: https://github.com/imring/disluapp/
 
 // MIT License
 
@@ -29,7 +30,29 @@
 #include "../dump_info.hpp"
 #include "ljconst.hpp"
 
+/**
+ * @brief LuaJIT namespace in the DisLua library.
+ * 
+ * Bytecode dump format:
+ * @code
+ * dump   = header proto+ 0U
+ * header = ESC 'L' 'J' versionB flagsU [namelenU nameB*]
+ * proto  = lengthU pdata
+ * pdata  = phead bcinsW* uvdataH* kgc* knum* [debugB*]
+ * phead  = flagsB numparamsB framesizeB numuvB numkgcU numknU numbcU
+ *          [debuglenU [firstlineU numlineU]]
+ * kgc    = kgctypeU { ktab | (loU hiU) | (rloU rhiU iloU ihiU) | strB* }
+ * knum   = intU0 | (loU1 hiU)
+ * ktab   = narrayU nhashU karray* khash*
+ * karray = ktabk
+ * khash  = ktabk ktabk
+ * ktabk  = ktabtypeU { intU | (loU hiU) | strB* }
+ *
+ * B = 8 bit, H = 16 bit, W = 32 bit, U = ULEB128 of W, U0/U1 = ULEB128 of W+1
+ * @endcode
+ */
 namespace dislua::lj {
+/// Class for parsing LuaJIT bytecode.
 class parser : public dump_info {
   std::string read_to_zero() {
     std::string s;
@@ -273,12 +296,12 @@ class parser : public dump_info {
   }
 
   void write_bc_instructions(proto &pt, buffer &ptbuf) {
-    for (instruction &cins : pt.ins)
+    for (instruction &cins: pt.ins)
       ptbuf.write(cins);
   }
 
   void write_uv(proto &pt, buffer &ptbuf) {
-    for (ushort &uv : pt.uv)
+    for (ushort &uv: pt.uv)
       ptbuf.write(uv);
   }
 
@@ -315,7 +338,7 @@ class parser : public dump_info {
       copy_table.erase(it->first);
     }
 
-    for (table_t::value_type &kv : copy_table) {
+    for (table_t::value_type &kv: copy_table) {
       write_ktabk(kv.first, pthash);
       write_ktabk(kv.second, pthash);
     }
@@ -327,7 +350,7 @@ class parser : public dump_info {
   }
 
   void write_kgc(proto &pt, buffer &ptbuf) {
-    for (kgc_t &kgc : pt.kgc)
+    for (kgc_t &kgc: pt.kgc)
       std::visit(
           overloaded{[&](proto) { ptbuf.write_uleb128(KGC_CHILD); },
                      [&](table_t arg) {
@@ -360,7 +383,7 @@ class parser : public dump_info {
   }
 
   void write_knum(proto &pt, buffer &ptbuf) {
-    for (double &val : pt.knum) {
+    for (double &val: pt.knum) {
       if (almost_equal(std::fmod(val, 1), 0.0, 2))
         ptbuf.write_uleb128_33(static_cast<uleb128>(val));
       else {
@@ -369,6 +392,44 @@ class parser : public dump_info {
         ptbuf.write_uleb128(v[1]);
       }
     }
+  }
+
+  void write_lineinfo(proto &pt, buffer &ptdebug) {
+    if (pt.lineinfo.size() != pt.ins.size())
+      throw std::runtime_error("LuaJIT: Line number != instruction number");
+    for (uint line: pt.lineinfo) {
+      if (pt.numline >= 1 << 16)
+        ptdebug.write(line - pt.firstline);
+      else if (pt.numline >= 1 << 8)
+        ptdebug.write(static_cast<ushort>(line - pt.firstline));
+      else
+        ptdebug.write(static_cast<uchar>(line - pt.firstline));
+    }
+  }
+
+  void write_uvname(proto &pt, buffer &ptdebug) {
+    if (pt.uv_names.size() != pt.uv.size())
+      throw std::runtime_error(
+          "LuaJIT: Number of upvalue names != upvalue count");
+    for (std::string &name: pt.uv_names) {
+      ptdebug.write(name.begin(), name.end());
+      ptdebug.write('\0');
+    }
+  }
+
+  void write_varname(proto &pt, buffer &ptdebug) {
+    size_t last = 0;
+    for (varname &info: pt.varnames) {
+      if (info.type >= VARNAME__MAX) {
+        ptdebug.write(info.name.begin(), info.name.end());
+        ptdebug.write('\0');
+      } else
+        ptdebug.write(info.type);
+      ptdebug.write_uleb128(static_cast<uleb128>(info.start - last));
+      last = info.start;
+      ptdebug.write_uleb128(static_cast<uleb128>(info.end - info.start));
+    }
+    ptdebug.write(VARNAME_END);
   }
 
   void write_proto(proto &pt) {
@@ -385,9 +446,9 @@ class parser : public dump_info {
     ptbuf.write_uleb128(static_cast<uleb128>(pt.ins.size()));
 
     if ((header.flags & DUMP_STRIP) == 0) {
-      // write_lineinfo(pt, ptdebug);
-      // write_uvname(pt, ptdebug);
-      // write_varname(pt, ptdebug);
+      write_lineinfo(pt, ptdebug);
+      write_uvname(pt, ptdebug);
+      write_varname(pt, ptdebug);
 
       sizedebug = ptdebug.iwrite;
       ptbuf.write_uleb128(static_cast<uleb128>(sizedebug));
@@ -451,7 +512,7 @@ public:
     buf->reset();
 
     write_header();
-    for (proto &pt : protos)
+    for (proto &pt: protos)
       write_proto(pt);
     buf->write('\0');
 

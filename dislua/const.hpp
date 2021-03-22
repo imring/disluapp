@@ -1,4 +1,5 @@
-// dislua
+// Project: disluapp
+// URL: https://github.com/imring/disluapp/
 
 // MIT License
 
@@ -40,24 +41,22 @@ using uleb128 = uint;
 using leb128 = std::make_signed_t<uleb128>;
 
 // Version format: major * 100 + minor.
-constexpr uint version = 100;
+constexpr uint version = 101;
 
 /// List of compiler versions supported by this library.
 enum compilers {
   /// Unknown compiler.
   DISLUA_UNKNOWN = -1,
-  /// [LuaJIT](https://luajit.org/) (v1/v2).
+  /// [LuaJIT](https://luajit.org/) (the library supports v1 & v2).
   DISLUA_LUAJIT,
-  /// [luac](https://www.lua.org/) (v5.4).
+  /// [luac](https://www.lua.org/) (the library supports v5.4).
   DISLUA_LUAC,
 };
 
 namespace {
 // https://en.cppreference.com/w/cpp/utility/variant/visit
 // https://stackoverflow.com/questions/46604950/what-does-operator-mean-in-code-of-c
-template <typename... Ts> struct overloaded : Ts... {
-  using Ts::operator()...;
-};
+template <typename... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template <typename... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 // https://habr.com/ru/post/106294/#comment_3341606
@@ -80,7 +79,7 @@ static inline result pointer_cast(const source *v) {
 
 // https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
 template <class T>
-typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
+static typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
 almost_equal(T x, T y, int ulp) {
   // the machine epsilon has to be scaled to the magnitude of the values used
   // and multiplied by the desired precision in ULPs (units in the last place)
