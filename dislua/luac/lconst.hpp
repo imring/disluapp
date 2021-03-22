@@ -1,4 +1,5 @@
-// dislua
+// Project: disluapp
+// URL: https://github.com/imring/disluapp/
 
 // MIT License
 
