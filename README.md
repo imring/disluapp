@@ -23,7 +23,7 @@ Install the library using CMake:
 ```bash
 $ mkdir build && cd build
 $ cmake ..
-$ sudo cmake --build . --target INSTALL
+$ sudo cmake --build . --target install
 ```
 
 Add `dislua` to your CMake-project by using:
