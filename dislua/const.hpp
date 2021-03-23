@@ -30,6 +30,9 @@
 #include <limits>
 #include <type_traits>
 
+#pragma push_macro("min")
+#undef min
+
 namespace dislua {
 using uchar = unsigned char;
 using ushort = unsigned short;
@@ -41,7 +44,7 @@ using uleb128 = uint;
 using leb128 = std::make_signed_t<uleb128>;
 
 // Version format: major * 100 + minor.
-constexpr uint version = 101;
+constexpr uint version = 102;
 
 /// List of compiler versions supported by this library.
 enum compilers {
@@ -81,12 +84,13 @@ static typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
 almost_equal(T x, T y, int ulp) {
   // the machine epsilon has to be scaled to the magnitude of the values used
   // and multiplied by the desired precision in ULPs (units in the last place)
-  return std::fabs(x - y) <=
-             std::numeric_limits<T>::epsilon() * std::fabs(x + y) * ulp
-         // unless the result is subnormal
-         || std::fabs(x - y) < std::numeric_limits<T>::min();
+  return std::fabs(x-y) <= std::numeric_limits<T>::epsilon() * std::fabs(x+y) * ulp
+      // unless the result is subnormal
+      || std::fabs(x-y) < std::numeric_limits<T>::min();
 }
 } // namespace
 } // namespace dislua
+
+#pragma pop_macro("min")
 
 #endif // DISLUA_CONST_H

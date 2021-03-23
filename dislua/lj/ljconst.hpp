@@ -95,7 +95,7 @@ enum varnames : uchar {
 
 /// Bytecode operand modes. ORDER BCMode.
 enum bcmode {
-  BCMnone, BCMdst, BCMbase, BCMvar, BCMrbase, BCMuv,  /* Mode A must be <= 7 */
+  BCM___, BCMdst, BCMbase, BCMvar, BCMrbase, BCMuv,  /* Mode A must be <= 7 */
   BCMlit, BCMlits, BCMpri, BCMnum, BCMstr, BCMtab, BCMfunc, BCMjump, BCMcdata,
   BCM_max
 };
