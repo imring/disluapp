@@ -4,7 +4,12 @@ project(dislua)
 
 include(GNUInstallDirs)
 
+option(BUILD_TEST "Build tests." ON)
 option(BUILD_DOC "Build the Doxygen documentation." OFF)
+
+if (BUILD_TEST)
+  add_subdirectory(tests)
+endif()
 
 if (BUILD_DOC)
   find_package(Doxygen)
@@ -26,7 +31,7 @@ target_include_directories(dislua INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_LI
 
 install(TARGETS dislua EXPORT dislua)
 
-install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/dislua"
+install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/include/dislua"
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/LICENSE"
               "${CMAKE_CURRENT_LIST_DIR}/README.md"

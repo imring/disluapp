@@ -1,3 +1,8 @@
+# v1.03 - 30.03.2021
+- Added unit tests.
+- Updated the documentation.
+- Types from `dump_info` moved to a separate file and added `operator==` for `instruction`, `proto` and `varname`.
+
 # v1.02 - 22.03.2021
 - Fixed bug with undefined `BCM___`.
 - Fixed bug with conflict between WinAPI's macro `min` and the function `std::numeric_limits<T>::min()`.

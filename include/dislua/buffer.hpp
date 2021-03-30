@@ -150,8 +150,8 @@ public:
   template <typename It>
   void read(It first, It last, bool next = true) {
     using T = typename std::iterator_traits<It>::value_type;
-    static_assert(sizeof(T) == sizeof(uchar),
-                  "Size of type not equals size of byte type.");
+    //static_assert(sizeof(T) == sizeof(uchar),
+    //              "Size of type not equals size of byte type.");
 
     size_t s = static_cast<size_t>(std::distance(first, last));
     if (iread + s - 1 >= size())
@@ -183,8 +183,8 @@ public:
   template <typename It>
   void write(It first, It last, std::input_iterator_tag) {
     using T = typename std::iterator_traits<It>::value_type;
-    static_assert(sizeof(T) == sizeof(uchar),
-                  "Size of type not equals size of byte type.");
+    //static_assert(sizeof(T) == sizeof(uchar),
+    //              "Size of type not equals size of byte type.");
 
     std::vector<uchar> v(first, last);
     write(v.begin(), v.end());
@@ -226,8 +226,8 @@ public:
   template <typename It>
   void write(It first, It last, std::forward_iterator_tag) {
     using T = typename std::iterator_traits<It>::value_type;
-    static_assert(sizeof(T) == sizeof(uchar),
-                  "Size of type not equals size of byte type.");
+    //static_assert(sizeof(T) == sizeof(uchar),
+    //              "Size of type not equals size of byte type.");
 
     size_t s = static_cast<size_t>(std::distance(first, last));
     if (iwrite + s - 1 >= size())
@@ -514,7 +514,23 @@ public:
   size_t iread = 0;
   /// Write index.
   size_t iwrite = 0;
+
+  friend bool operator==(const buffer &lhs,
+                         const buffer &rhs) {
+    return lhs.d == rhs.d;
+  }
+
+  template <typename T, typename A>
+  friend bool operator==(const buffer &lhs,
+                         const std::vector<T, A> &rhs) {
+    return lhs.d == rhs;
+  }
+
+  template <typename T, typename A>
+  friend bool operator==(const std::vector<T, A> &lhs,
+                         const buffer &rhs) {
+    return rhs == lhs;
+  }
 };
 } // namespace dislua
-
 #endif // DISLUA_BUFFER_H

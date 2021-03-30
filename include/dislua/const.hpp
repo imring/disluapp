@@ -44,7 +44,7 @@ using uleb128 = uint;
 using leb128 = std::make_signed_t<uleb128>;
 
 // Version format: major * 100 + minor.
-constexpr uint version = 102;
+constexpr uint version = 103;
 
 /// List of compiler versions supported by this library.
 enum compilers {
