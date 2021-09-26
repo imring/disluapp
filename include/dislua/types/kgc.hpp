@@ -47,8 +47,7 @@ struct proto;
  * - std::complex<double>: KGC_COMPLEX (0+1i);
  * - std::string: KGC_STR ("Hello, World!").
  */
-using kgc_t = std::variant<proto, table_t, long long, unsigned long long,
-                           std::complex<double>, std::string>;
+using kgc_t = std::variant<proto, table_t, long long, unsigned long long, std::complex<double>, std::string>;
 } // namespace dislua
 
 #endif // DISLUA_TYPES_KGC_H

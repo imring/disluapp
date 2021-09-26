@@ -27,12 +27,13 @@
 #define DISLUA_LJ_PARSER_H
 
 #include "../const.hpp"
+#include "../detail.hpp"
 #include "../dump_info.hpp"
 #include "ljconst.hpp"
 
 /**
  * @brief LuaJIT namespace in the DisLua library.
- * 
+ *
  * Bytecode dump format:
  * @code
  * dump   = header proto+ 0U
@@ -62,10 +63,27 @@ class parser : public dump_info {
     return s;
   }
 
+  template <typename T>
+  T read_with_uleb128() {
+    constexpr size_t num = sizeof(T) / sizeof(uleb128);
+    uleb128 vals[num];
+    buf->read_uleb128(vals, num);
+    return std::bit_cast<T>(vals);
+  }
+
+  template <typename T>
+  static void write_with_uleb128(T val, buffer &buf) {
+    constexpr size_t num = sizeof(T) / sizeof(uleb128);
+    uleb128 vals[num];
+    std::memcpy(vals, &val, sizeof(T));
+    buf.write_uleb128(vals, num);
+  }
+
   /// Read
   void read_header() {
-    if (buf->read() != header::HEAD1 || buf->read() != header::HEAD2 ||
-        buf->read() != header::HEAD3)
+    if (buf->read() != header::HEAD1
+     || buf->read() != header::HEAD2
+     || buf->read() != header::HEAD3)
       throw std::runtime_error("LuaJIT: Invalid header.");
 
     version = static_cast<uint>(buf->read());
@@ -75,15 +93,15 @@ class parser : public dump_info {
     uleb128 flags = buf->read_uleb128();
     header.flags = flags;
 
-    flags &= DUMP_BE;
-    flags &= DUMP_STRIP;
-    flags &= DUMP_FFI;
+    flags &= dump_flags::be;
+    flags &= dump_flags::strip;
+    flags &= dump_flags::ffi;
     if (version == 2)
-      flags &= DUMP_FR2;
+      flags &= dump_flags::fr2;
     if (flags)
       throw std::runtime_error("LuaJIT: Unknown header flags.");
 
-    if ((header.flags & DUMP_STRIP) == 0) {
+    if ((header.flags & dump_flags::strip) == 0) {
       uleb128 len = buf->read_uleb128();
       header.debug_name.resize(len);
       buf->read(header.debug_name.begin(), header.debug_name.end());
@@ -108,22 +126,34 @@ class parser : public dump_info {
     uleb128 type = buf->read_uleb128();
     table_val_t value;
 
-    if (type >= KTAB_STR) {
-      std::string v;
-      v.resize(type - KTAB_STR);
-      buf->read(v.begin(), v.end());
-      value = v;
-    } else if (type == KTAB_NUM) {
+    switch (type) {
+    case ktab::nil:
+      value = nullptr;
+      break;
+    case ktab::fal:
+      value = false;
+      break;
+    case ktab::tru:
+      value = true;
+      break;
+    case ktab::integer: {
+      uleb128 v = buf->read_uleb128();
+      value = static_cast<leb128>(v);
+      break;
+    }
+    case ktab::number: {
       uleb128 vals[2] = {0};
       buf->read_uleb128(vals, 2);
-      value = *pointer_cast<double *>(vals);
-    } else if (type == KTAB_INT) {
-      uleb128 v = buf->read_uleb128();
-      value = leb128(v);
-    } else if (type == KTAB_NIL)
-      value = nullptr;
-    else
-      value = type == KTAB_TRUE;
+      value = std::bit_cast<double>(vals);
+      break;
+    }
+    default: {
+      std::string v;
+      v.resize(type - ktab::string);
+      buf->read(v.begin(), v.end());
+      value = v;
+    }
+    }
 
     return value;
   }
@@ -147,37 +177,39 @@ class parser : public dump_info {
   }
 
   void read_kgc(proto &pt, uleb128 size) {
-    uleb128 type = KGC_CHILD;
+    uleb128 type;
     while (size--) {
       type = buf->read_uleb128();
 
-      if (type == KGC_CHILD) {
-        pt.kgc.push_back(temp_protos.back());
+      switch (type) {
+      case kgc::child:
+        pt.kgc.emplace_back(temp_protos.back());
         temp_protos.pop_back();
-      } else if (type == KGC_TAB) {
+        break;
+      case kgc::tab: {
         table_t table = read_ktab();
-        pt.kgc.push_back(table);
-      } else if (type == KGC_I64) {
-        long long v = 0;
-        buf->read_uleb128(pointer_cast<uleb128 *>(&v),
-                          sizeof(long long) / sizeof(uleb128));
-        pt.kgc.push_back(v);
-      } else if (type == KGC_U64) {
-        unsigned long long v = 0;
-        buf->read_uleb128(pointer_cast<uleb128 *>(&v),
-                          sizeof(unsigned long long) / sizeof(uleb128));
-        pt.kgc.push_back(v);
-      } else if (type == KGC_COMPLEX) {
-        std::complex<double> v;
-        buf->read_uleb128(pointer_cast<uleb128 *>(&v),
-                          sizeof(std::complex<double>) / sizeof(uleb128));
-        pt.kgc.push_back(v);
-      } else if (type >= KGC_STR) {
-        uint length = type - KGC_STR;
-        std::string str;
-        str.resize(length);
+        pt.kgc.emplace_back(table);
+        break;
+      }
+      case kgc::i64:
+        pt.kgc.emplace_back(read_with_uleb128<long long>());
+        break;
+      case kgc::u64:
+        pt.kgc.emplace_back(read_with_uleb128<unsigned long long>());
+        break;
+      case kgc::complex: {
+        double x = read_with_uleb128<double>(), y = read_with_uleb128<double>();
+        std::complex<double> z{x, y};
+        pt.kgc.emplace_back(z);
+        break;
+      }
+      default: {
+        uleb128 length = type - kgc::string;
+        std::string str(length, '\0');
         buf->read(str.begin(), str.end());
-        pt.kgc.push_back(str);
+        pt.kgc.emplace_back(str);
+        break;
+      }
       }
     }
   }
@@ -187,10 +219,10 @@ class parser : public dump_info {
       bool isnum = buf->read(false) & 1;
 
       uleb128 result[2] = {buf->read_uleb128_33(), 0};
-      double v = 0;
+      double v;
       if (isnum) {
         result[1] = buf->read_uleb128();
-        v = *pointer_cast<double *>(result);
+        v = std::bit_cast<double>(result);
       } else
         v = static_cast<double>(static_cast<leb128>(result[0]));
       pt.knum.push_back(v);
@@ -199,7 +231,7 @@ class parser : public dump_info {
 
   void read_lineinfo(proto &pt, uleb128 size) {
     while (size--) {
-      uint line = 0;
+      uint line;
       if (pt.numline >= 1 << 16)
         line = buf->read<uint>();
       else if (pt.numline >= 1 << 8)
@@ -217,12 +249,12 @@ class parser : public dump_info {
 
   void read_varname(proto &pt) {
     size_t last = 0;
-    uchar type = 0;
-    while (type = buf->read(), type != VARNAME_END) {
+    uchar type;
+    while (type = buf->read(), type != varnames::end) {
       varname info = {};
       info.type = type;
 
-      if (type >= VARNAME__MAX) {
+      if (type >= varnames::MAX) {
         buf->iread--;
         info.name = read_to_zero();
       }
@@ -248,16 +280,16 @@ class parser : public dump_info {
     sizebc = buf->read_uleb128();
 
     uchar flags = pt.flags;
-    flags &= PROTO_CHILD;
-    flags &= PROTO_VARARG;
-    flags &= PROTO_FFI;
-    flags &= PROTO_NOJIT;
-    flags &= PROTO_ILOOP;
+    flags &= proto_flags::child;
+    flags &= proto_flags::varargs;
+    flags &= proto_flags::ffi;
+    flags &= proto_flags::nojit;
+    flags &= proto_flags::iloop;
     if (flags)
       throw std::runtime_error("LuaJIT: Unknown prototype flags.");
 
     uleb128 sizedbg = 0;
-    if ((header.flags & DUMP_STRIP) == 0) {
+    if ((header.flags & dump_flags::strip) == 0) {
       sizedbg = buf->read_uleb128();
       if (sizedbg) {
         pt.firstline = buf->read_uleb128();
@@ -289,7 +321,7 @@ class parser : public dump_info {
     buf->write(static_cast<uchar>(version));
     buf->write_uleb128(header.flags);
 
-    if ((header.flags & DUMP_STRIP) == 0) {
+    if ((header.flags & dump_flags::strip) == 0) {
       buf->write_uleb128(static_cast<uleb128>(header.debug_name.size()));
       buf->write(header.debug_name.begin(), header.debug_name.end());
     }
@@ -306,25 +338,25 @@ class parser : public dump_info {
   }
 
   void write_ktabk(const table_val_t &val, buffer &pthash) {
-    std::visit(
-        overloaded{[&](std::nullptr_t) { pthash.write_uleb128(KTAB_NIL); },
-                   [&](bool arg) {
-                     pthash.write_uleb128(arg ? KTAB_TRUE : KTAB_FALSE);
-                   },
-                   [&](leb128 arg) {
-                     pthash.write_uleb128(KTAB_INT);
-                     pthash.write_uleb128(static_cast<uleb128>(arg));
-                   },
-                   [&](double arg) {
-                     pthash.write_uleb128(KTAB_NUM);
-                     pthash.write_uleb128(pointer_cast<uleb128 *>(&arg), 2);
-                   },
-                   [&](std::string arg) {
-                     pthash.write_uleb128(KTAB_STR +
-                                          static_cast<uleb128>(arg.size()));
-                     pthash.write(arg.begin(), arg.end());
-                   }},
-        val);
+    std::visit(detail::overloaded{[&](std::nullptr_t) {
+                                    pthash.write_uleb128(ktab::nil);
+                                  },
+                                  [&](bool arg) {
+                                    pthash.write_uleb128(arg ? ktab::tru : ktab::fal);
+                                  },
+                                  [&](leb128 arg) {
+                                    pthash.write_uleb128(ktab::integer);
+                                    pthash.write_uleb128(static_cast<uleb128>(arg));
+                                  },
+                                  [&](double arg) {
+                                    pthash.write_uleb128(ktab::number);
+                                    write_with_uleb128(arg, pthash);
+                                  },
+                                  [&](std::string arg) {
+                                    pthash.write_uleb128(ktab::string + static_cast<uleb128>(arg.size()));
+                                    pthash.write(arg.begin(), arg.end());
+                                  }},
+               val);
   }
 
   void write_ktab(table_t &table, buffer &ptbuf) {
@@ -351,43 +383,39 @@ class parser : public dump_info {
 
   void write_kgc(proto &pt, buffer &ptbuf) {
     for (kgc_t &kgc: pt.kgc)
-      std::visit(
-          overloaded{[&](proto) { ptbuf.write_uleb128(KGC_CHILD); },
-                     [&](table_t arg) {
-                       ptbuf.write_uleb128(KGC_TAB);
-                       write_ktab(arg, ptbuf);
-                     },
-                     [&](long long arg) {
-                       ptbuf.write_uleb128(KGC_I64);
-                       ptbuf.write_uleb128(pointer_cast<uleb128 *>(&arg),
-                                           sizeof(long long) / sizeof(uleb128));
-                     },
-                     [&](unsigned long long arg) {
-                       ptbuf.write_uleb128(KGC_U64);
-                       ptbuf.write_uleb128(pointer_cast<uleb128 *>(&arg),
-                                           sizeof(unsigned long long) /
-                                               sizeof(uleb128));
-                     },
-                     [&](std::complex<double> arg) {
-                       ptbuf.write_uleb128(KGC_COMPLEX);
-                       ptbuf.write_uleb128(pointer_cast<uleb128 *>(&arg),
-                                           sizeof(std::complex<double>) /
-                                               sizeof(uleb128));
-                     },
-                     [&](std::string arg) {
-                       ptbuf.write_uleb128(static_cast<uleb128>(arg.size()) +
-                                           KGC_STR);
-                       ptbuf.write(arg.begin(), arg.end());
-                     }},
-          kgc);
+      std::visit(detail::overloaded{[&](const proto &) {
+                                      ptbuf.write_uleb128(kgc::child);
+                                    },
+                                    [&](table_t arg) {
+                                      ptbuf.write_uleb128(kgc::tab);
+                                      write_ktab(arg, ptbuf);
+                                    },
+                                    [&](long long arg) {
+                                      ptbuf.write_uleb128(kgc::i64);
+                                      write_with_uleb128(arg, ptbuf);
+                                    },
+                                    [&](unsigned long long arg) {
+                                      ptbuf.write_uleb128(kgc::u64);
+                                      write_with_uleb128(arg, ptbuf);
+                                    },
+                                    [&](std::complex<double> arg) {
+                                      ptbuf.write_uleb128(kgc::complex);
+                                      write_with_uleb128(arg, ptbuf);
+                                    },
+                                    [&](std::string arg) {
+                                      ptbuf.write_uleb128(static_cast<uleb128>(arg.size()) + kgc::string);
+                                      ptbuf.write(arg.begin(), arg.end());
+                                    }},
+                 kgc);
   }
 
   void write_knum(proto &pt, buffer &ptbuf) {
     for (double &val: pt.knum) {
-      if (almost_equal(std::fmod(val, 1), 0.0, 2))
+      if (detail::almost_equal(std::fmod(val, 1), 0.0, 2))
         ptbuf.write_uleb128_33(static_cast<uleb128>(val));
       else {
-        uleb128 *v = pointer_cast<uleb128 *>(&val);
+        uleb128 v[2] = {0};
+        std::memcpy(v, &val, sizeof(val));
         ptbuf.write_uleb128_33(v[0], true);
         ptbuf.write_uleb128(v[1]);
       }
@@ -409,8 +437,7 @@ class parser : public dump_info {
 
   void write_uvname(proto &pt, buffer &ptdebug) {
     if (pt.uv_names.size() != pt.uv.size())
-      throw std::runtime_error(
-          "LuaJIT: Number of upvalue names != upvalue count");
+      throw std::runtime_error("LuaJIT: Number of upvalue names != upvalue count");
     for (std::string &name: pt.uv_names) {
       ptdebug.write(name.begin(), name.end());
       ptdebug.write('\0');
@@ -420,7 +447,7 @@ class parser : public dump_info {
   void write_varname(proto &pt, buffer &ptdebug) {
     size_t last = 0;
     for (varname &info: pt.varnames) {
-      if (info.type >= VARNAME__MAX) {
+      if (info.type >= varnames::MAX) {
         ptdebug.write(info.name.begin(), info.name.end());
         ptdebug.write('\0');
       } else
@@ -429,7 +456,7 @@ class parser : public dump_info {
       last = info.start;
       ptdebug.write_uleb128(static_cast<uleb128>(info.end - info.start));
     }
-    ptdebug.write(VARNAME_END);
+    ptdebug.write(varnames::end);
   }
 
   void write_proto(proto &pt) {
@@ -445,7 +472,7 @@ class parser : public dump_info {
     ptbuf.write_uleb128(static_cast<uleb128>(pt.knum.size()));
     ptbuf.write_uleb128(static_cast<uleb128>(pt.ins.size()));
 
-    if ((header.flags & DUMP_STRIP) == 0) {
+    if ((header.flags & dump_flags::strip) == 0) {
       write_lineinfo(pt, ptdebug);
       write_uvname(pt, ptdebug);
       write_varname(pt, ptdebug);
@@ -474,11 +501,10 @@ class parser : public dump_info {
   std::vector<proto> temp_protos;
 
 public:
-  parser(buffer &_buf) : dump_info(_buf) {}
-  parser(const dump_info &rv) : dump_info(rv) {}
-  ~parser() {}
+  explicit parser(const buffer &_buf = {}) : dump_info(_buf) {}
+  explicit parser(const dump_info &rv) : dump_info(rv) {}
 
-  void read() {
+  void read() override {
     buf->reset_indices();
 
     read_header();
@@ -508,7 +534,7 @@ public:
     buf->reset_indices();
   }
 
-  void write() {
+  void write() override {
     buf->reset();
 
     write_header();
@@ -519,7 +545,9 @@ public:
     buf->reset_indices();
   }
 
-  compilers compiler() { return DISLUA_LUAJIT; }
+  compilers compiler() override {
+    return compilers::luajit;
+  }
 };
 } // namespace dislua::lj
 

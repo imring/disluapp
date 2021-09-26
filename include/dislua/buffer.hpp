@@ -44,13 +44,13 @@ public:
 
   /**
    * @brief Constructs with two iterators.
-   * 
+   *
    * @code{.cpp}
    * // input iterators
    * std::ifstream luac("./file.luac", std::ios::binary);
    * dislua::buffer buf_input((std::istreambuf_iterator<char>(luac)),
    *                          std::istreambuf_iterator<char>());
-   * 
+   *
    * // forward iterators
    * std::vector<unsigned char> a = {1, 2, 3};
    * dislua::buffer buf_forward(a.begin(), a.end());
@@ -67,7 +67,7 @@ public:
 
   /**
    * @brief Constructs with an initialization list.
-   * 
+   *
    * @code{.cpp}
    * dislua::buffer buf{1, 2, 3};
    * @endcode
@@ -150,15 +150,14 @@ public:
   template <typename It>
   void read(It first, It last, bool next = true) {
     using T = typename std::iterator_traits<It>::value_type;
-    //static_assert(sizeof(T) == sizeof(uchar),
-    //              "Size of type not equals size of byte type.");
+    // static_assert(sizeof(T) == sizeof(uchar),
+    //               "Size of type not equals size of byte type.");
 
-    size_t s = static_cast<size_t>(std::distance(first, last));
+    auto s = static_cast<size_t>(std::distance(first, last));
     if (iread + s - 1 >= size())
       throw std::out_of_range("Read index better than container size.");
 
-    decltype(d)::iterator start =
-        d.begin() + static_cast<std::ptrdiff_t>(iread);
+    auto start = d.begin() + static_cast<std::ptrdiff_t>(iread);
     std::copy(start, start + static_cast<std::ptrdiff_t>(s), first);
     if (next)
       iread += s;
@@ -176,15 +175,15 @@ public:
    *
    * @tparam It Iterator type.
    * @param[in] first,last Range of elements.
-   * 
+   *
    * @warning Size of value type of the iterator must be equal to size of
    * unsigned char.
    */
   template <typename It>
   void write(It first, It last, std::input_iterator_tag) {
     using T = typename std::iterator_traits<It>::value_type;
-    //static_assert(sizeof(T) == sizeof(uchar),
-    //              "Size of type not equals size of byte type.");
+    // static_assert(sizeof(T) == sizeof(uchar),
+    //               "Size of type not equals size of byte type.");
 
     std::vector<uchar> v(first, last);
     write(v.begin(), v.end());
@@ -226,15 +225,14 @@ public:
   template <typename It>
   void write(It first, It last, std::forward_iterator_tag) {
     using T = typename std::iterator_traits<It>::value_type;
-    //static_assert(sizeof(T) == sizeof(uchar),
-    //              "Size of type not equals size of byte type.");
+    // static_assert(sizeof(T) == sizeof(uchar),
+    //               "Size of type not equals size of byte type.");
 
-    size_t s = static_cast<size_t>(std::distance(first, last));
+    auto s = static_cast<size_t>(std::distance(first, last));
     if (iwrite + s - 1 >= size())
       d.resize(size() + s);
 
-    decltype(d)::iterator start =
-        d.begin() + static_cast<std::ptrdiff_t>(iwrite);
+    auto start = d.begin() + static_cast<std::ptrdiff_t>(iwrite);
     std::copy(first, last, start);
     iwrite += s;
   }
@@ -284,7 +282,7 @@ public:
    * @exception std::out_of_range An error occurred while exiting the container.
    */
   template <typename T = uchar>
-  inline T read(bool next = true) {
+  T read(bool next = true) {
     static_assert(!std::is_pointer_v<T>, "This method doesn't support pointer");
 
     T val;
@@ -306,7 +304,7 @@ public:
    * @warning Type T doesn't have to be a pointer.
    */
   template <typename T>
-  inline void write(T val) {
+  void write(T val) {
     static_assert(!std::is_pointer_v<T>, "This method doesn't support pointer");
     write(&val, 1);
   }
@@ -314,15 +312,15 @@ public:
   /**
    * @brief Writes values from the container to the buffer using two
    * iterators.
-   * 
+   *
    * @code{.cpp}
    * dislua::buffer buf;
-   * 
+   *
    * // input iterators
    * std::ifstream luac("./file.luac", std::ios::binary);
    * buf.write((std::istreambuf_iterator<char>(luac)),
    *           std::istreambuf_iterator<char>());
-   * 
+   *
    * // forward iterators
    * std::vector<unsigned char> a = {1, 2, 3};
    * buf.write(a.begin(), a.end());
@@ -332,7 +330,7 @@ public:
    * @param[in] first,last Range of elements.
    */
   template <typename It>
-  inline void write(It first, It last) {
+  void write(It first, It last) {
     write(first, last, typename std::iterator_traits<It>::iterator_category());
   }
   /**
@@ -341,25 +339,33 @@ public:
    * @code{.cpp}
    * dislua::buffer a{1, 2, 3};
    * dislua::buffer b;
-   * 
+   *
    * b.write(a);
    * @endcode
-   * 
+   *
    * @param[in] buf Another buffer.
    */
-  inline void write(buffer &buf) { write(buf.d.begin(), buf.d.end()); }
+  void write(buffer &buf) {
+    write(buf.d.begin(), buf.d.end());
+  }
 
   /// Resets the buffer.
-  inline void reset() {
+  void reset() {
     reset_indices();
     d.clear();
   }
   /// Resets buffer indices.
-  inline void reset_indices() { iread = iwrite = 0; }
+  void reset_indices() {
+    iread = iwrite = 0;
+  }
   /// Returns a copy of the buffer container.
-  inline decltype(d) copy_data() { return d; }
+  decltype(d) copy_data() {
+    return d;
+  }
   /// Returns a size of the container.
-  inline size_t size() { return d.size(); }
+  size_t size() {
+    return d.size();
+  }
 
   // Another types
 
@@ -382,7 +388,7 @@ public:
   uleb128 read_uleb128(bool next = true) {
     size_t idx = iread;
     uchar vb = read();
-    uleb128 val = static_cast<uleb128>(vb);
+    auto val = static_cast<uleb128>(vb);
 
     if (val >= 0x80) {
       int sh = 0;
@@ -439,7 +445,7 @@ public:
   uleb128 read_uleb128_33(bool next = true) {
     size_t idx = iread;
     uchar vb = read();
-    uleb128 val = static_cast<uleb128>(vb >> 1);
+    auto val = static_cast<uleb128>(vb >> 1);
 
     if (val >= 0x40) {
       int sh = -1;
@@ -480,7 +486,7 @@ public:
    * dislua::buffer vals[2] = { 400, 51877 };
    * buf.write_uleb128(vals, 2);
    * @endcode
-   * 
+   *
    * @param[in] obj Array.
    * @param[in] number Amount of elements.
    */
@@ -515,20 +521,17 @@ public:
   /// Write index.
   size_t iwrite = 0;
 
-  friend bool operator==(const buffer &lhs,
-                         const buffer &rhs) {
+  friend bool operator==(const buffer &lhs, const buffer &rhs) {
     return lhs.d == rhs.d;
   }
 
   template <typename T, typename A>
-  friend bool operator==(const buffer &lhs,
-                         const std::vector<T, A> &rhs) {
+  friend bool operator==(const buffer &lhs, const std::vector<T, A> &rhs) {
     return lhs.d == rhs;
   }
 
   template <typename T, typename A>
-  friend bool operator==(const std::vector<T, A> &lhs,
-                         const buffer &rhs) {
+  friend bool operator==(const std::vector<T, A> &lhs, const buffer &rhs) {
     return rhs == lhs;
   }
 };

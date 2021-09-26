@@ -23,36 +23,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef DISLUA_CONST_H
-#define DISLUA_CONST_H
+#ifndef DISLUA_DETAIL_H
+#define DISLUA_DETAIL_H
 
-#include <cmath>
-#include <limits>
 #include <type_traits>
 
-namespace dislua {
-using uchar = unsigned char;
-using ushort = unsigned short;
-using uint = unsigned int;
+namespace dislua::detail {
+// https://en.cppreference.com/w/cpp/utility/variant/visit
+// https://stackoverflow.com/questions/46604950/what-does-operator-mean-in-code-of-c
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-/// Unsigned type [LEB128](https://en.wikipedia.org/wiki/LEB128).
-using uleb128 = uint;
-/// Signed type [LEB128](https://en.wikipedia.org/wiki/LEB128).
-using leb128 = std::make_signed_t<uleb128>;
+// https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
+template <typename T, std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
+bool almost_equal(T x, T y, int ulp) {
+#pragma push_macro("min")
+#undef min
 
-/**
- * @brief disluapp version.
- * Format: MAJOR.MINOR.PATCH
- */
-constexpr uint version = 110;
+  // the machine epsilon has to be scaled to the magnitude of the values used
+  // and multiplied by the desired precision in ULPs (units in the last place)
+  return std::fabs(x - y) <= std::numeric_limits<T>::epsilon() * std::fabs(x + y) * ulp
+         // unless the result is subnormal
+         || std::fabs(x - y) < std::numeric_limits<T>::min();
 
-/// List of compiler versions supported by this library.
-enum class compilers {
-  /// Unknown compiler.
-  unknown = -1,
-  /// [LuaJIT](https://luajit.org/) (the library supports v1 & v2).
-  luajit
-};
-} // namespace dislua
+#pragma pop_macro("min")
+}
+}; // namespace dislua::detail
 
-#endif // DISLUA_CONST_H
+#endif // DISLUA_DETAIL_H

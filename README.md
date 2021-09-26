@@ -1,6 +1,6 @@
 # DisLua
 [![Language](https://img.shields.io/badge/language-C++-blue.svg)](https://isocpp.org/)
-[![Standard](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
+[![Standard](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Release](https://img.shields.io/github/v/release/imring/disluapp)](https://github.com/imring/disluapp/releases/latest)
 
@@ -10,31 +10,30 @@ DisLua is a header-only library that allows you to parse and rewrite the bytecod
 - [Luad](https://github.com/imring/luad) - Disassembler for compiled Lua scripts.
 
 ## Documentation
-You can build Doxygen documentation:
-- Using CMake specifying the option `-DBUILD_DOC=ON`:
+You can build [Doxygen](https://www.doxygen.nl/index.html) documentation:
+- Using CMake specifying the `DISLUA_DOCS` option:
 ```bash
-$ mkdir build && cd build
-$ cmake .. -DBUILD_DOC=ON
+$ cmake .. -DDISLUA_DOCS=ON -B build
+$ cd build
 $ cmake --build . --target doc
 ```
 - Manually using the command `doxygen`.
 
 ## Testing
-You can test the library using CTest specifying the option `-DBUILD_TEST=ON`:
+You can test the library using CTest specifying the `DISLUA_TESTS` option (C++20 required):
 ```bash
-$ mkdir build && cd build
-$ cmake .. -DBUILD_TEST=ON
+$ cmake .. -DDISLUA_TESTS=ON -B build
+$ cd build
 $ cmake --build .
-$ cd tests
 $ ctest
 ```
 
 ## Use in projects
-Install the library using CMake:
+Install the library using CMake (`DISLUA_INSTALL` option is enabled by default):
 ```bash
-$ mkdir build && cd build
-$ cmake ..
-$ sudo cmake --build . --target install
+$ cmake .. -B build
+$ cd build
+$ cmake --build . --target install
 ```
 
 Add `dislua` to your CMake-project by using:

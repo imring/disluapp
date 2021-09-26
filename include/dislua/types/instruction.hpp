@@ -56,8 +56,7 @@ namespace dislua {
 struct instruction {
   instruction() : opcode(0), a(0), d(0) {}
   instruction(uchar opcode, uchar a, ushort d) : opcode(opcode), a(a), d(d) {}
-  instruction(uchar opcode, uchar a, uchar b, uchar c)
-      : opcode(opcode), a(a), b(b), c(c) {}
+  instruction(uchar opcode, uchar a, uchar b, uchar c) : opcode(opcode), a(a), b(b), c(c) {}
 
   uchar opcode;
 
@@ -70,10 +69,8 @@ struct instruction {
     ushort d;
   };
 
-  friend bool operator==(const dislua::instruction &left,
-                         const dislua::instruction &right) {
-    return left.opcode == right.opcode && left.a == right.a &&
-           left.d == right.d;
+  friend bool operator==(const dislua::instruction &left, const dislua::instruction &right) {
+    return left.opcode == right.opcode && left.a == right.a && left.d == right.d;
   }
 };
 } // namespace dislua

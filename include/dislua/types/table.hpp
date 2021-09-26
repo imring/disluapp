@@ -39,12 +39,11 @@ namespace dislua {
  * Variants in LuaJIT:
  * - std::nullptr_t: KTAB_NIL (nil);
  * - bool: KTAB_FALSE/KTAB_TRUE (true/false);
- * - leb128: KTAB_INT (123);
+ * - dislua::leb128: KTAB_INT (123);
  * - double: KTAB_NUM (123.456);
  * - std::string: KTAB_STR ("Hello, World!").
  */
-using table_val_t =
-    std::variant<std::nullptr_t, bool, leb128, double, std::string>;
+using table_val_t = std::variant<std::nullptr_t, bool, leb128, double, std::string>;
 
 /**
  * @brief Table type.

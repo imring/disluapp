@@ -50,13 +50,10 @@ struct proto {
   std::vector<varname> varnames;
 
   friend bool operator==(const dislua::proto &left, const dislua::proto &right) {
-    return left.flags == right.flags && left.numparams == right.numparams &&
-           left.framesize == right.framesize &&
-           left.firstline == right.firstline && left.numline == right.numline &&
-           left.ins == right.ins && left.uv == right.uv &&
-           left.kgc == right.kgc && left.knum == right.knum &&
-           left.lineinfo == right.lineinfo && left.uv_names == right.uv_names &&
-           left.varnames == right.varnames;
+    return left.flags == right.flags && left.numparams == right.numparams && left.framesize == right.framesize &&
+           left.firstline == right.firstline && left.numline == right.numline && left.ins == right.ins &&
+           left.uv == right.uv && left.kgc == right.kgc && left.knum == right.knum && left.lineinfo == right.lineinfo &&
+           left.uv_names == right.uv_names && left.varnames == right.varnames;
   }
 };
 } // namespace dislua

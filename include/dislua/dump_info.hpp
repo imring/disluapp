@@ -40,7 +40,7 @@
 namespace dislua {
 /**
  * @brief Class with all information about the compiled Lua script.
- * 
+ *
  * This class is the backbone of parsers.
  */
 class dump_info {
@@ -50,7 +50,7 @@ public:
    *
    * @param[in] _buf Buffer.
    */
-  dump_info(buffer &_buf) : buf(std::make_unique<buffer>(_buf)) {}
+  explicit dump_info(const buffer &_buf = {}) : buf(std::make_unique<buffer>(_buf)) {}
 
   /**
    * @brief Constructor with a class dump_info.
@@ -58,25 +58,37 @@ public:
    * @param[in] rv Class with information about the script.
    */
   dump_info(const dump_info &rv)
-      : header(rv.header), version(rv.version), protos(rv.protos),
-        buf(std::make_unique<buffer>(*rv.buf)) {}
+      : header(rv.header), version(rv.version), protos(rv.protos), buf(std::make_unique<buffer>(*rv.buf)) {}
 
-  virtual ~dump_info() {}
+  virtual ~dump_info() = default;
 
-  /// Read the information from the buffer.
-  virtual void read() { throw std::runtime_error("Unknown compiler."); }
-  /// Write the information to the buffer.
-  virtual void write() { throw std::runtime_error("Unknown compiler."); }
-  /// Get compiler.
-  virtual compilers compiler() { return DISLUA_UNKNOWN; }
+  /**
+   * @brief Read the information from the buffer.
+   *
+   * @exception std::runtime_error Parsing error.
+   * @exception std::out_of_range An error occurred while exiting the container.
+   */
+  virtual void read() {
+    throw std::runtime_error{"Unknown compiler."};
+  }
+  /**
+   * @brief Write the information to the buffer.
+   *
+   * @exception std::runtime_error Parsing error.
+   * @exception std::out_of_range An error occurred while exiting the container.
+   */
+  virtual void write() {
+    throw std::runtime_error{"Unknown compiler."};
+  }
+  /// Get compiler (see dislua::compilers).
+  virtual compilers compiler() {
+    return compilers::unknown;
+  }
 
   /// Reset all informations.
   void reset() {
     version = 0;
-
-    header.flags = 0;
-    header.debug_name.clear();
-
+    header = {};
     protos.clear();
     buf->reset();
   }

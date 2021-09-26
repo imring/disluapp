@@ -27,6 +27,7 @@
 #define DISLUA_TYPES_VARNAME_H
 
 #include <string>
+#include <string_view>
 
 #include "../const.hpp"
 
@@ -36,17 +37,15 @@ namespace dislua {
  */
 struct varname {
   varname() : type(0), name(), start(0), end(0){};
-  varname(uchar type, size_t start, size_t end, std::string name = "")
+  varname(uchar type, size_t start, size_t end, std::string_view name = "")
       : type(type), name(name), start(start), end(end){};
 
   uchar type;
   std::string name;
   size_t start, end;
 
-  friend bool operator==(const dislua::varname &left,
-                         const dislua::varname &right) {
-    return left.type == right.type && left.name == right.name &&
-           left.start == right.start && left.end == right.end;
+  friend bool operator==(const dislua::varname &left, const dislua::varname &right) {
+    return left.type == right.type && left.name == right.name && left.start == right.start && left.end == right.end;
   }
 };
 } // namespace dislua

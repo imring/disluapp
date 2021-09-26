@@ -31,6 +31,7 @@
 
 #include "buffer.hpp"
 #include "const.hpp"
+#include "detail.hpp"
 #include "dump_info.hpp"
 
 #include "lj/ljparser.hpp"
@@ -69,7 +70,7 @@ namespace dislua {
  * @param[in] buf Buffer with compiled lua script.
  * @return std::unique_ptr<dump_info> Smart pointer to compiled lua script
  * information.
- * 
+ *
  * @warning T-type must be child of dislua::dump_info.
  *
  * @note If you need to parse with all the parsers that are available in the
@@ -78,10 +79,8 @@ namespace dislua {
  * @exception std::runtime_error Parsing error.
  * @exception std::out_of_range An error occurred while exiting the container.
  */
-template <typename T,
-          typename = std::enable_if_t<std::is_base_of_v<dump_info, T> &&
-                                      !std::is_same_v<T, dump_info>>>
-static std::unique_ptr<dump_info> read_current(buffer &buf) {
+template <typename T, std::enable_if_t<std::is_base_of_v<dump_info, T> && !std::is_same_v<T, dump_info>, bool> = true>
+std::unique_ptr<dump_info> read_current(buffer &buf) {
   std::unique_ptr<dump_info> check = std::make_unique<T>(buf);
   check->read();
   return check;
@@ -89,10 +88,10 @@ static std::unique_ptr<dump_info> read_current(buffer &buf) {
 
 namespace {
 template <typename T>
-static std::unique_ptr<dump_info> read_current_wo_exception(buffer &buf) try {
+std::unique_ptr<dump_info> read_current_wo_exception(buffer &buf) try {
   return read_current<T>(buf);
 } catch (...) {
-  return nullptr;
+  return {};
 }
 } // namespace
 
@@ -113,9 +112,7 @@ static std::unique_ptr<dump_info> read_current_wo_exception(buffer &buf) try {
  * information.
  */
 static std::unique_ptr<dump_info> read_all(buffer &buf) {
-  std::unique_ptr<dump_info> in;
-  if (in = read_current_wo_exception<lj::parser>(buf)) return in;
-
+  std::unique_ptr<dump_info> in = read_current_wo_exception<lj::parser>(buf);
   return in;
 }
 

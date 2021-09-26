@@ -4,40 +4,54 @@ project(dislua)
 
 include(GNUInstallDirs)
 
-option(BUILD_TEST "Build tests." ON)
-option(BUILD_DOC "Build the Doxygen documentation." OFF)
+option(DISLUA_INSTALL "Install the disluapp library" ON)
+option(DISLUA_TESTS "Build tests." ON)
+option(DISLUA_DOCS "Build the Doxygen documentation." OFF)
 
-if (BUILD_TEST)
-  add_subdirectory(tests)
-endif()
-
-if (BUILD_DOC)
+if (DISLUA_DOCS)
   find_package(Doxygen)
   if (DOXYGEN_FOUND)
-    message(${CMAKE_CURRENT_LIST_DIR}/Doxyfile)
-    add_custom_target(doc
+    add_custom_target(docs
       COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/Doxyfile
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-    
-    install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/docs/html"
-            DESTINATION ${CMAKE_INSTALL_DOCDIR})
   else()
     message(WARNING "Doxygen not found, unable to generate documentation")
   endif()
 endif()
 
 add_library(dislua INTERFACE)
-target_include_directories(dislua INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}> $<INSTALL_INTERFACE:include>)
+target_include_directories(dislua
+  INTERFACE
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+if (MSVC)
+  target_compile_options(dislua INTERFACE /EHsc)
+else()
+  target_compile_options(dislua INTERFACE -fcxx-exceptions)
+endif()
 
-install(TARGETS dislua EXPORT dislua)
+if (DISLUA_TESTS)
+  enable_testing()
 
-install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/include/dislua"
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(FILES "${CMAKE_CURRENT_LIST_DIR}/LICENSE"
-              "${CMAKE_CURRENT_LIST_DIR}/README.md"
-        DESTINATION ${CMAKE_INSTALL_DOCDIR})
+  add_subdirectory(tests)
+endif()
 
-install(FILES cmake/dislua-config.cmake
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/dislua")
-install(EXPORT dislua FILE dislua-targets.cmake
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/dislua")
+if (DISLUA_INSTALL)
+  install(TARGETS dislua EXPORT dislua-targets)
+
+  install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/dislua"
+          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  install(FILES "${CMAKE_CURRENT_LIST_DIR}/LICENSE"
+                "${CMAKE_CURRENT_LIST_DIR}/README.md"
+          DESTINATION ${CMAKE_INSTALL_DOCDIR})
+
+  install(FILES "${PROJECT_SOURCE_DIR}/cmake/dislua-config.cmake"
+          DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/dislua")
+  install(EXPORT dislua-targets
+          DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/dislua")
+
+  if (DISLUA_DOCS)
+    install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/docs/html"
+            DESTINATION ${CMAKE_INSTALL_DOCDIR})
+  endif()
+endif()

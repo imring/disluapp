@@ -1,3 +1,9 @@
+# v1.1.0 - 26.09.2021
+- Updated version format.
+- New LuaJIT test.
+- Updated flag formats (e.g. `KGC_CHILD` => `kgc::child`).
+- `reinterpret_cast` is replaced with `std::bit_cast` (C++20 required).
+
 # v1.03 - 30.03.2021
 - Added unit tests.
 - Updated the documentation.

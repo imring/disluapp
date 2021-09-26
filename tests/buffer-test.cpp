@@ -49,8 +49,7 @@ TEST(BUFFER_TEST, READ_ITERATOR) {
 TEST(BUFFER_TEST, WRITE_INPUT_ITERATOR) {
   std::istringstream in("\x01\x10\x80");
   dislua::buffer buf;
-  buf.write((std::istreambuf_iterator<char>(in)),
-            std::istreambuf_iterator<char>());
+  buf.write((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 
   static std::vector<dislua::uchar> eq = {0x1, 0x10, 0x80};
   ASSERT_EQ(buf.copy_data(), eq);

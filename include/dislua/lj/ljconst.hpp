@@ -31,6 +31,9 @@
 
 #include "../const.hpp"
 
+#pragma push_macro("___")
+#define ___ none
+
 namespace dislua::lj {
 /// Bytecode dump header.
 namespace header {
@@ -40,65 +43,76 @@ constexpr uchar HEAD3 = 0x4a;
 } // namespace header
 
 /// Compatibility flags.
-enum dump_flags : uint {
-  DUMP_BE = 0b1,
-  DUMP_STRIP = 0b10,
-  DUMP_FFI = 0b100,
-  DUMP_FR2 = 0b1000 // only for luajit v2.
+namespace dump_flags {
+enum : uleb128 {
+  be = 0b1,
+  strip = 0b10,
+  ffi = 0b100,
+  fr2 = 0b1000 // only for luajit v2.
 };
+}
 
 /// Flags for prototype.
-enum proto_flags : uchar {
+namespace proto_flags {
+enum : uchar {
   /// Has child prototypes.
-  PROTO_CHILD = 0b1,
+  child = 0b1,
   /// Vararg function.
-  PROTO_VARARG = 0b10,
+  varargs = 0b10,
   /// Uses BC_KCDATA for FFI datatypes.
-  PROTO_FFI = 0b100,
+  ffi = 0b100,
   /// JIT disabled for this function.
-  PROTO_NOJIT = 0b1000,
+  nojit = 0b1000,
   /// Patched bytecode with ILOOP etc.
-  PROTO_ILOOP = 0b10000
+  iloop = 0b10000
 };
+}
 
 /// Type codes for the GC constants of a prototype. Plus length for strings.
-enum kgc : uleb128 {
-  KGC_CHILD,
-  KGC_TAB,
-  KGC_I64,
-  KGC_U64,
-  KGC_COMPLEX,
-  KGC_STR
-};
+namespace kgc {
+enum : uleb128 { child, tab, i64, u64, complex, string };
+}
 
 /// Type codes for the keys/values of a constant table.
-enum ktab : uleb128 {
-  KTAB_NIL,
-  KTAB_FALSE,
-  KTAB_TRUE,
-  KTAB_INT,
-  KTAB_NUM,
-  KTAB_STR
-};
+namespace ktab {
+enum : uleb128 { nil, fal, tru, integer, number, string };
+}
 
 /// Fixed internal variable names.
-enum varnames : uchar {
-  VARNAME_END,
-  VARNAME_FOR_IDX,   // (for index)
-  VARNAME_FOR_STOP,  // (for limit)
-  VARNAME_FOR_STEP,  // (for step)
-  VARNAME_FOR_GEN,   // (for generator)
-  VARNAME_FOR_STATE, // (for state)
-  VARNAME_FOR_CTL,   // (for control)
-  VARNAME__MAX
+namespace varnames {
+enum : uchar {
+  end,
+  index,     // (for index)
+  limit,     // (for limit)
+  step,      // (for step)
+  generator, // (for generator)
+  state,     // (for state)
+  control,   // (for control)
+  MAX
 };
+}
 
 /// Bytecode operand modes. ORDER BCMode.
-enum bcmode {
-  BCM___, BCMdst, BCMbase, BCMvar, BCMrbase, BCMuv,  /* Mode A must be <= 7 */
-  BCMlit, BCMlits, BCMpri, BCMnum, BCMstr, BCMtab, BCMfunc, BCMjump, BCMcdata,
-  BCM_max
+namespace bcmode {
+enum {
+  none,
+  dst,
+  base,
+  var,
+  rbase,
+  uv, /* Mode A must be <= 7 */
+  lit,
+  lits,
+  pri,
+  num,
+  str,
+  tab,
+  func,
+  jump,
+  cdata,
+  MAX
 };
+}
 
 /// LuaJIT v1.
 namespace v1 {
@@ -228,17 +242,18 @@ namespace v1 {
   _(FUNCCW, rbase, ___, ___, ___)
 
 /// Bytecode opcode numbers.
-enum bcops : uchar {
-#define BCENUM(name, ma, mb, mc, mm) BC_##name,
+namespace bcops {
+enum : uchar {
+#define BCENUM(name, ma, mb, mc, mm) name,
   BCDEF(BCENUM)
 #undef BCENUM
-      BC__MAX
+      BCMAX
 };
+}; // namespace bcops
 
 /// Name and mode of bytecode opcode.
 static const std::pair<std::string, int> opcodes[] = {
-#define BCOPCODES(name, ma, mb, mc, mm) \
-  {#name, BCM##ma | (BCM##mb << 3) | (BCM##mc << 7)},
+#define BCOPCODES(name, ma, mb, mc, mm) {#name, bcmode::ma | bcmode::mb << 3 | bcmode::mc << 7},
     BCDEF(BCOPCODES)
 #undef BCOPCODES
 };
@@ -378,17 +393,18 @@ namespace v2 {
   _(FUNCCW, rbase, ___, ___, ___)
 
 /// Bytecode opcode numbers.
-enum bcops : uchar {
-#define BCENUM(name, ma, mb, mc, mm) BC_##name,
+namespace bcops {
+enum : uchar {
+#define BCENUM(name, ma, mb, mc, mm) name,
   BCDEF(BCENUM)
 #undef BCENUM
-      BC__MAX
+      BCMAX
 };
+}; // namespace
 
 /// Name and mode of bytecode opcode.
-static const std::pair<std::string, int> opcodes[] = {
-#define BCOPCODES(name, ma, mb, mc, mm) \
-  {#name, BCM##ma | (BCM##mb << 3) | (BCM##mc << 7)},
+inline const std::pair<std::string, int> opcodes[] = {
+#define BCOPCODES(name, ma, mb, mc, mm) {#name, bcmode::ma | bcmode::mb << 3 | bcmode::mc << 7},
     BCDEF(BCOPCODES)
 #undef BCOPCODES
 };
@@ -396,5 +412,7 @@ static const std::pair<std::string, int> opcodes[] = {
 #undef BCDEF
 } // namespace v2
 } // namespace dislua::lj
+
+#pragma pop_macro("___")
 
 #endif // DISLUA_LJ_CONST_H
