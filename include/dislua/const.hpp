@@ -30,6 +30,12 @@
 #include <limits>
 #include <type_traits>
 
+/**
+ * @brief disluapp version.
+ * Format: MAJOR.MINOR.PATCH
+ */
+#define DISLUA_VERSION 111L
+
 namespace dislua {
 using uchar = unsigned char;
 using ushort = unsigned short;
@@ -39,12 +45,6 @@ using uint = unsigned int;
 using uleb128 = uint;
 /// Signed type [LEB128](https://en.wikipedia.org/wiki/LEB128).
 using leb128 = std::make_signed_t<uleb128>;
-
-/**
- * @brief disluapp version.
- * Format: MAJOR.MINOR.PATCH
- */
-constexpr uint version = 110;
 
 /// List of compiler versions supported by this library.
 enum class compilers {

@@ -508,7 +508,11 @@ public:
    */
   void write_uleb128_33(uleb128 val, bool isnum = false) {
     size_t index = iwrite;
-    write_uleb128(1 + 2 * val);
+    unsigned long long n = 1 + 2 * static_cast<unsigned long long>(val);
+    for (; n >= 0x80; n >>= 7)
+      write(static_cast<uchar>((n & 0x7f) | 0x80));
+    write(static_cast<uchar>(n));
+
     uchar &v = d[index];
     if (isnum)
       v |= 1;

@@ -1,8 +1,14 @@
+# v1.1.1 - 29.10.2021
+- Fixed checking of header/prototype flags in LuaJIT.
+- New unit test with check flags.
+- Disable warning `unused functions` replaced with `[[maybe_unused]]`.
+- The types `proto`/`varname` use [default comparisons](https://en.cppreference.com/w/cpp/language/default_comparisons).
+
 # v1.1.0 - 26.09.2021
 - Updated version format.
 - New LuaJIT test.
 - Updated flag formats (e.g. `KGC_CHILD` => `kgc::child`).
-- `reinterpret_cast` is replaced with `std::bit_cast` (C++20 required).
+- `reinterpret_cast` replaced with `std::bit_cast` (C++20 required).
 
 # v1.03 - 30.03.2021
 - Added unit tests.
@@ -14,7 +20,7 @@
 - Fixed bug with conflict between WinAPI's macro `min` and the function `std::numeric_limits<T>::min()`.
 
 # v1.01 - 22.03.2021
-- Predefined macros `CHECK_COMPILER` was replaced with anonymous function `read_current_wo_exception`.
+- Predefined macro `CHECK_COMPILER` replaced with anonymous function `read_current_wo_exception`.
 - Updated the documentation.
 - Added the `.clang-format` file.
 - Added functions to write lineinfo/upvalue names/varnames for LuaJIT.

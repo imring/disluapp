@@ -43,17 +43,6 @@
  * compiled Lua scripts.
  */
 namespace dislua {
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-#elif defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4505)
-#endif
-
 /**
  * @brief Parse the buffer using the specific parser.
  *
@@ -80,7 +69,7 @@ namespace dislua {
  * @exception std::out_of_range An error occurred while exiting the container.
  */
 template <typename T, std::enable_if_t<std::is_base_of_v<dump_info, T> && !std::is_same_v<T, dump_info>, bool> = true>
-std::unique_ptr<dump_info> read_current(buffer &buf) {
+std::unique_ptr<dump_info> read_current(const buffer &buf) {
   std::unique_ptr<dump_info> check = std::make_unique<T>(buf);
   check->read();
   return check;
@@ -88,7 +77,7 @@ std::unique_ptr<dump_info> read_current(buffer &buf) {
 
 namespace {
 template <typename T>
-std::unique_ptr<dump_info> read_current_wo_exception(buffer &buf) try {
+std::unique_ptr<dump_info> read_current_wo_exception(const buffer &buf) try {
   return read_current<T>(buf);
 } catch (...) {
   return {};
@@ -111,18 +100,10 @@ std::unique_ptr<dump_info> read_current_wo_exception(buffer &buf) try {
  * @return std::unique_ptr<dump_info> Smart pointer to compiled lua script
  * information.
  */
-static std::unique_ptr<dump_info> read_all(buffer &buf) {
+[[maybe_unused]] inline std::unique_ptr<dump_info> read_all(const buffer &buf) {
   std::unique_ptr<dump_info> in = read_current_wo_exception<lj::parser>(buf);
   return in;
 }
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#elif defined(_MSC_VER)
-#pragma warning(pop)
-#endif
 } // namespace dislua
 
 #endif // DISLUA_H

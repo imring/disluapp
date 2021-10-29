@@ -1,5 +1,5 @@
 ﻿Language: Cpp
-Standard: c++17
+Standard: c++20
 BasedOnStyle: LLVM
 AlignEscapedNewlines: Left
 AlwaysBreakTemplateDeclarations: Yes

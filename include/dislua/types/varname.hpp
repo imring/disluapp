@@ -44,9 +44,7 @@ struct varname {
   std::string name;
   size_t start, end;
 
-  friend bool operator==(const dislua::varname &left, const dislua::varname &right) {
-    return left.type == right.type && left.name == right.name && left.start == right.start && left.end == right.end;
-  }
+  friend bool operator==(const dislua::varname &left, const dislua::varname &right) = default;
 };
 } // namespace dislua
 

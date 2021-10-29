@@ -93,11 +93,11 @@ class parser : public dump_info {
     uleb128 flags = buf->read_uleb128();
     header.flags = flags;
 
-    flags &= dump_flags::be;
-    flags &= dump_flags::strip;
-    flags &= dump_flags::ffi;
+    flags &= ~dump_flags::be;
+    flags &= ~dump_flags::strip;
+    flags &= ~dump_flags::ffi;
     if (version == 2)
-      flags &= dump_flags::fr2;
+      flags &= ~dump_flags::fr2;
     if (flags)
       throw std::runtime_error("LuaJIT: Unknown header flags.");
 
@@ -152,6 +152,7 @@ class parser : public dump_info {
       v.resize(type - ktab::string);
       buf->read(v.begin(), v.end());
       value = v;
+      break;
     }
     }
 
@@ -280,11 +281,11 @@ class parser : public dump_info {
     sizebc = buf->read_uleb128();
 
     uchar flags = pt.flags;
-    flags &= proto_flags::child;
-    flags &= proto_flags::varargs;
-    flags &= proto_flags::ffi;
-    flags &= proto_flags::nojit;
-    flags &= proto_flags::iloop;
+    flags &= ~proto_flags::child;
+    flags &= ~proto_flags::varargs;
+    flags &= ~proto_flags::ffi;
+    flags &= ~proto_flags::nojit;
+    flags &= ~proto_flags::iloop;
     if (flags)
       throw std::runtime_error("LuaJIT: Unknown prototype flags.");
 
@@ -370,9 +371,9 @@ class parser : public dump_info {
       copy_table.erase(it->first);
     }
 
-    for (table_t::value_type &kv: copy_table) {
-      write_ktabk(kv.first, pthash);
-      write_ktabk(kv.second, pthash);
+    for (const auto &[key, value]: copy_table) {
+      write_ktabk(key, pthash);
+      write_ktabk(value, pthash);
     }
 
     ptbuf.write_uleb128(static_cast<uleb128>(i - 1));

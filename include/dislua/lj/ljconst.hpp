@@ -31,9 +31,6 @@
 
 #include "../const.hpp"
 
-#pragma push_macro("___")
-#define ___ none
-
 namespace dislua::lj {
 /// Bytecode dump header.
 namespace header {
@@ -249,13 +246,16 @@ enum : uchar {
 #undef BCENUM
       BCMAX
 };
-}; // namespace bcops
+} // namespace bcops
 
 /// Name and mode of bytecode opcode.
-static const std::pair<std::string, int> opcodes[] = {
+[[maybe_unused]] inline const std::pair<std::string, int> opcodes[] = {
+#pragma push_macro("___")
+#define ___ none
 #define BCOPCODES(name, ma, mb, mc, mm) {#name, bcmode::ma | bcmode::mb << 3 | bcmode::mc << 7},
     BCDEF(BCOPCODES)
 #undef BCOPCODES
+#pragma pop_macro("___")
 };
 
 #undef BCDEF
@@ -400,19 +400,20 @@ enum : uchar {
 #undef BCENUM
       BCMAX
 };
-}; // namespace
+} // namespace
 
 /// Name and mode of bytecode opcode.
-inline const std::pair<std::string, int> opcodes[] = {
+[[maybe_unused]] inline const std::pair<std::string, int> opcodes[] = {
+#pragma push_macro("___")
+#define ___ none
 #define BCOPCODES(name, ma, mb, mc, mm) {#name, bcmode::ma | bcmode::mb << 3 | bcmode::mc << 7},
     BCDEF(BCOPCODES)
 #undef BCOPCODES
+#pragma pop_macro("___")
 };
 
 #undef BCDEF
 } // namespace v2
 } // namespace dislua::lj
-
-#pragma pop_macro("___")
 
 #endif // DISLUA_LJ_CONST_H

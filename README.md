@@ -20,7 +20,7 @@ $ cmake --build . --target doc
 - Manually using the command `doxygen`.
 
 ## Testing
-You can test the library using CTest specifying the `DISLUA_TESTS` option (C++20 required):
+You can test the library using CTest specifying the `DISLUA_TESTS` option:
 ```bash
 $ cmake .. -DDISLUA_TESTS=ON -B build
 $ cd build

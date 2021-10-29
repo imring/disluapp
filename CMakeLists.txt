@@ -29,6 +29,7 @@ if (MSVC)
 else()
   target_compile_options(dislua INTERFACE -fcxx-exceptions)
 endif()
+target_compile_features(dislua INTERFACE cxx_std_20)
 
 if (DISLUA_TESTS)
   enable_testing()

@@ -59,3 +59,31 @@ TEST(LUAJIT_TEST, PROTO_PARSE) {
   ASSERT_NO_THROW(info.read());
   ASSERT_EQ(info.protos.front(), p);
 }
+
+TEST(LUAJIT_TEST, HEADER_UNK_VERSION) {
+  lj::parser info;
+  info.version = 3;
+  info.header.flags = lj::dump_flags::strip;
+  info.protos.emplace_back(); // empty prototype
+
+  info.write();
+  ASSERT_THROW(info.read(), std::runtime_error);
+}
+
+TEST(LUAJIT_TEST, HEADER_UNK_FLAGS) {
+  lj::parser info;
+  info.version = 2;
+
+  // in header
+  info.header.flags = 0b10000;
+  info.protos.emplace_back(); // empty prototype
+  info.write();
+  ASSERT_THROW(info.read(), std::runtime_error);
+
+  // in prototype
+  info.header.flags = lj::dump_flags::strip;
+  info.protos.pop_back();
+  info.protos.push_back({ .flags = 0b100000 });
+  info.write();
+  ASSERT_THROW(info.read(), std::runtime_error);
+}
