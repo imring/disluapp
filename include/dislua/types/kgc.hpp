@@ -3,7 +3,7 @@
 
 // MIT License
 
-// Copyright (c) 2020-2021 Vitaliy Vorobets
+// Copyright (c) 2020-2022 Vitaliy Vorobets
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@
 #include "table.hpp"
 
 namespace dislua {
-struct proto;
+struct proto_id;
 
 /**
  * @brief Variation type for constant GC variables.
@@ -47,7 +47,7 @@ struct proto;
  * - std::complex<double>: KGC_COMPLEX (0+1i);
  * - std::string: KGC_STR ("Hello, World!").
  */
-using kgc_t = std::variant<proto, table_t, long long, unsigned long long, std::complex<double>, std::string>;
+using kgc_t = std::variant<proto_id, table_t, long long, unsigned long long, std::complex<double>, std::string>;
 } // namespace dislua
 
 #endif // DISLUA_TYPES_KGC_H

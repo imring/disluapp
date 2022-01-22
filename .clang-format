@@ -11,3 +11,4 @@ IndentWrappedFunctionNames: false
 AlwaysBreakAfterDefinitionReturnType: None
 ColumnLimit: 120
 AllowShortLambdasOnASingleLine: Empty
+IndentRequires: true

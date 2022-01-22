@@ -3,7 +3,7 @@
 
 // MIT License
 
-// Copyright (c) 2020-2021 Vitaliy Vorobets
+// Copyright (c) 2020-2022 Vitaliy Vorobets
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -50,15 +50,14 @@ public:
    *
    * @param[in] _buf Buffer.
    */
-  explicit dump_info(const buffer &_buf = {}) : buf(std::make_unique<buffer>(_buf)) {}
+  explicit dump_info(const buffer &_buf = {}) : buf(_buf) {}
 
   /**
-   * @brief Constructor with a class dump_info.
+   * @brief Copy constructor.
    *
    * @param[in] rv Class with information about the script.
    */
-  dump_info(const dump_info &rv)
-      : header(rv.header), version(rv.version), protos(rv.protos), buf(std::make_unique<buffer>(*rv.buf)) {}
+  dump_info(const dump_info &rv) = default;
 
   virtual ~dump_info() = default;
 
@@ -90,7 +89,7 @@ public:
     version = 0;
     header = {};
     protos.clear();
-    buf->reset();
+    buf.reset();
   }
 
   /// Header info.
@@ -105,8 +104,11 @@ public:
   /// Container with prototypes.
   std::vector<proto> protos;
   /// Main buffer.
-  std::unique_ptr<buffer> buf;
+  buffer buf;
 };
+
+template <typename T>
+concept CompilerInterface = std::is_base_of_v<dump_info, T> && !std::is_same_v<T, dump_info>;
 } // namespace dislua
 
 #endif // DISLUA_DUMP_INFO_H

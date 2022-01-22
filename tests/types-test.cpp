@@ -17,7 +17,7 @@ TEST(TYPES_TEST, INSTRUCTION) {
 
 TEST(TYPES_TEST, KGC) {
   using namespace std::complex_literals;
-  dislua::kgc_t val0 = dislua::proto(), val1 = -1LL, val2 = 1ULL, val3 = 1i, val4 = "test";
+  dislua::kgc_t val0 = dislua::proto_id{}, val1 = -1LL, val2 = 1ULL, val3 = 1i, val4 = "test";
 
   ASSERT_EQ(std::get<unsigned long long>(val2), std::abs(std::get<long long>(val1)));
   val0 = "test";

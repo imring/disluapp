@@ -3,7 +3,7 @@
 
 // MIT License
 
-// Copyright (c) 2020-2021 Vitaliy Vorobets
+// Copyright (c) 2020-2022 Vitaliy Vorobets
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -111,10 +111,11 @@ public:
    * @exception std::out_of_range An error occurred while exiting the container.
    */
   template <typename T>
+    requires std::is_trivially_copyable_v<T>
   void read(T *arr, size_t number, bool next = true) {
     size_t s = sizeof(T) * number;
     if (iread + s - 1 >= size())
-      throw std::out_of_range("Read index better than container size.");
+      throw std::out_of_range{"Read index better than container size."};
 
     uchar *data = d.data();
     std::memcpy(arr, data + iread, s);
@@ -149,13 +150,9 @@ public:
    */
   template <typename It>
   void read(It first, It last, bool next = true) {
-    using T = typename std::iterator_traits<It>::value_type;
-    // static_assert(sizeof(T) == sizeof(uchar),
-    //               "Size of type not equals size of byte type.");
-
     auto s = static_cast<size_t>(std::distance(first, last));
     if (iread + s - 1 >= size())
-      throw std::out_of_range("Read index better than container size.");
+      throw std::out_of_range{"Read index better than container size."};
 
     auto start = d.begin() + static_cast<std::ptrdiff_t>(iread);
     std::copy(start, start + static_cast<std::ptrdiff_t>(s), first);
@@ -181,29 +178,8 @@ public:
    */
   template <typename It>
   void write(It first, It last, std::input_iterator_tag) {
-    using T = typename std::iterator_traits<It>::value_type;
-    // static_assert(sizeof(T) == sizeof(uchar),
-    //               "Size of type not equals size of byte type.");
-
     std::vector<uchar> v(first, last);
     write(v.begin(), v.end());
-
-    /*size_t os = size();
-    std::copy(first, last,
-              std::inserter(d, d.begin() + std::ptrdiff_t(iwrite)));
-
-    size_t offset = os - iwrite;
-    size_t ds = size() - os;
-    if (offset != 0) {
-      if (ds < offset) {
-        decltype(d)::iterator start = d.begin() + std::ptrdiff_t(iwrite + ds);
-        std::copy(start + std::ptrdiff_t(ds),
-                  start + std::ptrdiff_t(ds + (os - ds)), start);
-        d.erase(d.end() - std::ptrdiff_t(ds), d.end());
-      } else
-        d.erase(d.end() - std::ptrdiff_t(offset), d.end());
-    }
-    iwrite += ds;*/
   }
 
   /**
@@ -224,10 +200,6 @@ public:
    */
   template <typename It>
   void write(It first, It last, std::forward_iterator_tag) {
-    using T = typename std::iterator_traits<It>::value_type;
-    // static_assert(sizeof(T) == sizeof(uchar),
-    //               "Size of type not equals size of byte type.");
-
     auto s = static_cast<size_t>(std::distance(first, last));
     if (iwrite + s - 1 >= size())
       d.resize(size() + s);
@@ -251,6 +223,7 @@ public:
    * @param[in] number Amount of elements.
    */
   template <typename T>
+    requires std::is_trivially_copyable_v<T>
   void write(T *arr, size_t number) {
     size_t s = sizeof(T) * number;
     if (iwrite + s - 1 >= size())
@@ -282,9 +255,8 @@ public:
    * @exception std::out_of_range An error occurred while exiting the container.
    */
   template <typename T = uchar>
+    requires(std::is_trivially_copyable_v<T> && !std::is_pointer_v<T>)
   T read(bool next = true) {
-    static_assert(!std::is_pointer_v<T>, "This method doesn't support pointer");
-
     T val;
     read(&val, 1, next);
     return val;
@@ -304,8 +276,8 @@ public:
    * @warning Type T doesn't have to be a pointer.
    */
   template <typename T>
+    requires(std::is_trivially_copyable_v<T> && !std::is_pointer_v<T>)
   void write(T val) {
-    static_assert(!std::is_pointer_v<T>, "This method doesn't support pointer");
     write(&val, 1);
   }
 
@@ -517,7 +489,7 @@ public:
     if (isnum)
       v |= 1;
     else
-      v &= 0xfe;
+      v &= ~1;
   }
 
   /// Read index.

@@ -3,7 +3,7 @@
 
 // MIT License
 
-// Copyright (c) 2020-2021 Vitaliy Vorobets
+// Copyright (c) 2020-2022 Vitaliy Vorobets
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -68,7 +68,7 @@ namespace dislua {
  * @exception std::runtime_error Parsing error.
  * @exception std::out_of_range An error occurred while exiting the container.
  */
-template <typename T, std::enable_if_t<std::is_base_of_v<dump_info, T> && !std::is_same_v<T, dump_info>, bool> = true>
+template <CompilerInterface T>
 std::unique_ptr<dump_info> read_current(const buffer &buf) {
   std::unique_ptr<dump_info> check = std::make_unique<T>(buf);
   check->read();
@@ -76,7 +76,7 @@ std::unique_ptr<dump_info> read_current(const buffer &buf) {
 }
 
 namespace {
-template <typename T>
+template <CompilerInterface T>
 std::unique_ptr<dump_info> read_current_wo_exception(const buffer &buf) try {
   return read_current<T>(buf);
 } catch (...) {

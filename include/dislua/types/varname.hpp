@@ -3,7 +3,7 @@
 
 // MIT License
 
-// Copyright (c) 2020-2021 Vitaliy Vorobets
+// Copyright (c) 2020-2022 Vitaliy Vorobets
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -36,13 +36,13 @@ namespace dislua {
  * @brief Variables name (debug information, for LuaJIT).
  */
 struct varname {
-  varname() : type(0), name(), start(0), end(0){};
+  varname() = default;
   varname(uchar type, size_t start, size_t end, std::string_view name = "")
       : type(type), name(name), start(start), end(end){};
 
-  uchar type;
+  uchar type = 0;
   std::string name;
-  size_t start, end;
+  size_t start = 0, end = 0;
 
   friend bool operator==(const dislua::varname &left, const dislua::varname &right) = default;
 };

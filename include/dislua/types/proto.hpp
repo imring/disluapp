@@ -3,7 +3,7 @@
 
 // MIT License
 
-// Copyright (c) 2020-2021 Vitaliy Vorobets
+// Copyright (c) 2020-2022 Vitaliy Vorobets
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -49,7 +49,14 @@ struct proto {
   std::vector<std::string> uv_names;
   std::vector<varname> varnames;
 
-  friend bool operator==(const dislua::proto &left, const dislua::proto &right) = default;
+  friend bool operator==(const proto &left, const proto &right) = default;
+};
+
+/// Index in prototype stack.
+struct proto_id {
+  size_t id = 0;
+
+  friend bool operator==(const proto_id &left, const proto_id &right) = default;
 };
 } // namespace dislua
 

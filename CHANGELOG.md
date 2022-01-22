@@ -1,3 +1,9 @@
+# v1.1.2 - 22.01.2022
+- Instead of copying a prototype (`proto`) in `kgc_t` now uses index in prototype stacks (`proto_id`).
+- Removed smart pointer in buffer from `dump_info`.
+- Added [constraints & concepts](https://en.cppreference.com/w/cpp/language/constraints).
+- Little fixes in the code.
+
 # v1.1.1 - 29.10.2021
 - Fixed checking of header/prototype flags in LuaJIT.
 - New unit test with check flags.
