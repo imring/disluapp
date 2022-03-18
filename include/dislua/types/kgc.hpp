@@ -34,7 +34,15 @@
 #include "table.hpp"
 
 namespace dislua {
-struct proto_id;
+/// Index in prototype stack.
+struct proto_id {
+  size_t id = 0;
+
+  proto_id() = default;
+  proto_id(size_t i): id{i} {}
+
+  friend bool operator==(const proto_id &left, const proto_id &right) = default;
+};
 
 /**
  * @brief Variation type for constant GC variables.

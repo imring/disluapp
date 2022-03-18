@@ -27,7 +27,7 @@ target_include_directories(dislua
 if (MSVC)
   target_compile_options(dislua INTERFACE /EHsc)
 else()
-  target_compile_options(dislua INTERFACE -fcxx-exceptions)
+  # target_compile_options(dislua INTERFACE -fcxx-exceptions)
 endif()
 target_compile_features(dislua INTERFACE cxx_std_20)
 

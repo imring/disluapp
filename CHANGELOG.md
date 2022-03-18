@@ -1,3 +1,6 @@
+# v1.1.3 - 18.03.2022
+- Fixed errors related to `proto_id`.
+
 # v1.1.2 - 22.01.2022
 - Instead of copying a prototype (`proto`) in `kgc_t` now uses index in prototype stacks (`proto_id`).
 - Removed smart pointer in buffer from `dump_info`.

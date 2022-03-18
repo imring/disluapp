@@ -51,13 +51,6 @@ struct proto {
 
   friend bool operator==(const proto &left, const proto &right) = default;
 };
-
-/// Index in prototype stack.
-struct proto_id {
-  size_t id = 0;
-
-  friend bool operator==(const proto_id &left, const proto_id &right) = default;
-};
 } // namespace dislua
 
 #endif // DISLUA_TYPES_PROTO_H
