@@ -547,7 +547,7 @@ public:
     buf.reset_indices();
   }
 
-  compilers compiler() override {
+  compilers compiler() const override {
     return compilers::luajit;
   }
 };

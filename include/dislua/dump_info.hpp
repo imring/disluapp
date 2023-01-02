@@ -80,7 +80,7 @@ public:
     throw std::runtime_error{"Unknown compiler."};
   }
   /// Get compiler (see dislua::compilers).
-  virtual compilers compiler() {
+  virtual compilers compiler() const {
     return compilers::unknown;
   }
 
