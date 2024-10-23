@@ -281,11 +281,11 @@ class parser : public dump_info {
     sizebc = buf.read_uleb128();
 
     uchar flags = pt.flags;
-    flags &= ~proto_flags::child;
-    flags &= ~proto_flags::varargs;
-    flags &= ~proto_flags::ffi;
-    flags &= ~proto_flags::nojit;
-    flags &= ~proto_flags::iloop;
+    flags &= static_cast<uchar>(~proto_flags::child);
+    flags &= static_cast<uchar>(~proto_flags::varargs);
+    flags &= static_cast<uchar>(~proto_flags::ffi);
+    flags &= static_cast<uchar>(~proto_flags::nojit);
+    flags &= static_cast<uchar>(~proto_flags::iloop);
     if (flags)
       throw std::runtime_error("LuaJIT: Unknown prototype flags.");
 

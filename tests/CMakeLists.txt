@@ -10,8 +10,7 @@ function(add_dltest file)
     ./${file}.cpp
   )
 
-  target_link_libraries(${name} PRIVATE dislua GTest::gmock GTest::gtest
-    GTest::gmock_main GTest::gtest_main)
+  target_link_libraries(${name} PRIVATE dislua GTest::gtest GTest::gtest_main)
   if (UNIX)
     target_link_libraries(${name} PRIVATE pthread)
   endif()

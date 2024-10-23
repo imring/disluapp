@@ -56,7 +56,7 @@ namespace dislua {
 struct instruction {
   instruction() : opcode(0), a(0), d(0) {}
   instruction(uchar opcode, uchar a, ushort d) : opcode(opcode), a(a), d(d) {}
-  instruction(uchar opcode, uchar a, uchar b, uchar c) : opcode(opcode), a(a), b(b), c(c) {}
+  instruction(uchar opcode, uchar a, uchar b, uchar c) : opcode(opcode), a(a), c(c), b(b) {}
 
   uchar opcode;
 
