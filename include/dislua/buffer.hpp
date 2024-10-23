@@ -489,7 +489,7 @@ public:
     if (isnum)
       v |= 1;
     else
-      v &= ~1;
+      v &= static_cast<uchar>(~1);
   }
 
   /// Read index.

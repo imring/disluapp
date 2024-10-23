@@ -38,7 +38,7 @@ namespace dislua {
 struct varname {
   varname() = default;
   varname(uchar type, size_t start, size_t end, std::string_view name = "")
-      : type(type), name(name), start(start), end(end){};
+      : type(type), name(name), start(start), end(end){}
 
   uchar type = 0;
   std::string name;
